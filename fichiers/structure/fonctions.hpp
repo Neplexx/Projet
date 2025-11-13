@@ -2,22 +2,16 @@
 #include <vector>
 #include <string>
 
-class coord {
+class Coord {
 private:
 	int x;
 	int y;
 public:
-	void set_x(int X) { x = X; } // définit la coordonnée x
-	void set_y(int Y) { y = Y; } // définit la coordonnée y
-	int get_x() { return x; } // retourne la coordonnée x
-	int get_y() { return y; } // retourne la coordonnée y
-	coord coord(int X, int Y) {
-		coord c;
-		c.x = X;
-		c.y = Y;
-		return c;
-	}
-	coord() : x(0), y(0) {}
+	void set_x(int X); // définit la coordonnée x
+	void set_y(int Y); // définit la coordonnée y
+	int const get_x(); // retourne la coordonnée x
+	int const get_y(); // retourne la coordonnée y
+	Coord(int X = 0, int Y = 0);
 };
 
 class avion {
@@ -25,86 +19,61 @@ private:
 	std::string code;
 	int altitude;
 	int vitesse;
-	coord position;
+	Coord position;
 	std::string destination;
 	int place_parking;
 	int carburant;
 public:
-	coord get_position() { return position; } // pour le ccr et l'app pour calculer les trajectoires ainsi que pour les enregistrer
+	void set_position(const Coord& pos);
+	Coord get_position() const;
 
-	// ajout de setters et getters utiles
-	void set_code(const std::string& c) { code = c; }
-	std::string get_code() { return code; }
+	void set_code(const std::string& c);
+	std::string get_code() const;
 
-	void set_altitude(int alt) { altitude = alt; }
-	int get_altitude() { return altitude; }
+	void set_altitude(int alt);
+	int get_altitude() const;
 
-	void set_vitesse(int vit) { vitesse = vit; }
-	int get_vitesse() { return vitesse; }
+	void set_vitesse(int vit);
+	int get_vitesse() const;
 
-	void set_position(const coord& pos) { position = pos; }
+	void set_destination(const std::string& dest);
+	std::string get_destination() const;
 
-	void set_destination(const std::string& dest) { destination = dest; }
-	std::string get_destination() { return destination; }
+	void set_place_parking(int place);
+	int get_place_parking() const;
 
-	void set_place_parking(int place) { place_parking = place; }
-	int get_place_parking() { return place_parking; }
+	void set_carburant(int carb);
+	int get_carburant() const;
 
-	void set_carburant(int carb) { carburant = carb; }
-	int get_carburant() { return carburant; }
+	avion::avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init);
 };
 
-class ccr { // vérificateur à l'international
+class CCR { //International
 public:
-	void calcul_trajectoire(avion& avion) {
-		// calcul d'une trajectoire sans collision pour l'avion
-		// à faire
-	}
-
-	void planning() {
-		// gère le planning aérien dans un fichier .json
-		// à faire
-	}
+	void calcul_trajectoire(avion& avion); // calcul d'une trajectoire sans collision pour l'avion
+	void planning(); // gère le planning aérien dans un fichier .json
 };
 
-class app { // abord d'un aéroport
+class APP { //Arrivée aéroport
 public:
-	void envoie_infos_avion() {
-		// envoie la trajectoire et altitude à suivre à l'avion après réception du signal
-		// à faire
-	}
-
-	void piste_libre() {
-		// demande à twr si la piste d'atterrissage est libre
-		// à faire
-	}
-
-	void urgence() {
-		// gère la situation d'urgence pour un avion
-		// à faire
-	}
+	void envoie_infos_avion(); // envoie la trajectoire et altitude à suivre à l'avion après réception du signal
+	void piste_libre(); // demande à twr si la piste d'atterrissage est libre
+	void urgence();
 };
 
-class twr { // circulation dans l'aéroport
+class TWR { //Dans aéroport
 private:
 	bool piste; // vrai si libre, false sinon
-	std::vector<bool> parking; // index = la place et l'élément indique si la place est libre ou non 
+	std::vector<bool> parking; // index = la place et l'élément indique si la place est libre ou non
+	void set_piste(bool facteur); // Protection de décollage pour que pas n'importe qui puisse libérer la piste
 public:
-	twr(int nb_places) : piste(true), parking(nb_places, true) {}
+	bool get_piste() const;
 
-	bool get_piste() { return piste; } // pour voie_libre() de l'app
+	int trouver_place_libre();
 
-	int trouver_place_libre() {
-		for (int i = 0; i < parking.size(); ++i) {
-			if (parking[i]) return i; // place libre trouvée
-		}
-		return -1; // pas de place libre
-	}
+	void décollage();
 
-	void décollage() {
-		// logique du décollage : libérer la piste et la place de parking
-		piste = false; // piste occupée
-		// mettre à jour la place de parking libre
-		// à faire
-	}
+	TWR(int nb_places);
 };
+
+//Ajouter class Thread
