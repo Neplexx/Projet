@@ -8,6 +8,7 @@ endif(MSVC)
     set(DEFS "PATH_IMG=\"${CMAKE_CURRENT_SOURCE_DIR}/img/\"")
     add_compile_definitions(${DEFS})
 
+set(SFML_STATIC_LIBRARIES ON)
 find_package(SFML 3 COMPONENTS Window Graphics System REQUIRED)
 link_libraries(SFML::Graphics SFML::Window SFML::System)
 
