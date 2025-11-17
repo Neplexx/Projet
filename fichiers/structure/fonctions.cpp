@@ -16,6 +16,14 @@ const int Coord::get_y() {
 
 Coord::Coord(int X, int Y) : x(X) , y(X) {}
 
+bool Coord::operator==(const Coord& other) const { 
+	return x == other.x && y == other.y; 
+}
+std::ostream& operator<<(std::ostream& os, const Coord& c) {
+	os << "(" << c.x << ", " << c.y << ")";
+	return os;
+};
+
 
 //fonctions class Avion
 
@@ -84,4 +92,6 @@ int TWR::trouver_place_libre() {
 }
 
 TWR::TWR(int nb_places) : piste(true), parking(nb_places, true){}
+
+
 

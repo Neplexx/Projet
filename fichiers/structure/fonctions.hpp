@@ -12,6 +12,8 @@ public:
 	int const get_x(); // retourne la coordonnée x
 	int const get_y(); // retourne la coordonnée y
 	Coord(int X = 0, int Y = 0);
+	bool operator==(const Coord& other) const;
+	friend std::ostream& operator<<(std::ostream& os, const Coord& c);
 };
 
 class avion {
@@ -77,3 +79,4 @@ public:
 };
 
 //Ajouter class Thread
+

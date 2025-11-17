@@ -1,1 +1,1 @@
-add_executable(main main.cpp structure/fonctions.cpp)
+add_executable(main main.cpp structure/fonctions.cpp structure/Thread.cpp)
