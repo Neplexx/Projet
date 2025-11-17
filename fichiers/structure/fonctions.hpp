@@ -52,7 +52,7 @@ public:
 
 class CCR { //International
 public:
-	void calcul_trajectoire(avion& avion); // calcul d'une trajectoire sans collision pour l'avion
+	void calcul_trajectoire(Avion& avion); // calcul d'une trajectoire sans collision pour l'avion
 	void planning(); // gère le planning aérien dans un fichier .json
 };
 
