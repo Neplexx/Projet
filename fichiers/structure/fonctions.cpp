@@ -24,6 +24,17 @@ std::ostream& operator<<(std::ostream& os, const Coord& c) {
 	return os;
 };
 
+void CCR::planning() {
+	using json = nlohmann::json;
+	json planning;
+	planning["Days"] = { "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche" };
+	planning["Arrival"] = { "Nice", "Rennes", "Paris", "Strasbourg", "Lille", "Toulouse" };
+	planning["Derparture"] = planning["Arrival"];
+	planning["Lenght"] = { {"1h45", "1h45", "1h30", "1h30", "1h15"}, {"1h45","0h45","1h45","1h15","1h30"}, {"1h45","0h45","1h00","0h30","1h15"}, {"1h30","1h45","1h00","1h00","2h00"},{"1h30", "1h15", "0h30", "1h00", "1h30" },{"1h15", "1h30", "1h15", "2h00", "1h30"}};
+	planning["AirplaneNumber"] = { "60", "12", "180", "10", "18", "60"};
+	planning["Time"] = { "0h00", "0h15", "0h30", "0h45" };
+}
+
 
 //fonctions class Avion
 
