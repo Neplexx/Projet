@@ -9,14 +9,14 @@ private:
 public:
 	void set_x(int X); // définit la coordonnée x
 	void set_y(int Y); // définit la coordonnée y
-	int const get_x(); // retourne la coordonnée x
-	int const get_y(); // retourne la coordonnée y
+	int get_x() const; // retourne la coordonnée x
+	int get_y() const; // retourne la coordonnée y
 	Coord(int X = 0, int Y = 0);
 	bool operator==(const Coord& other) const;
 	friend std::ostream& operator<<(std::ostream& os, const Coord& c);
 };
 
-class avion {
+class Avion {
 private:
 	std::string code;
 	int altitude;
@@ -47,7 +47,7 @@ public:
 	void set_carburant(int carb);
 	int get_carburant() const;
 
-	avion::avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init);
+	Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init);
 };
 
 class CCR { //International
@@ -72,6 +72,8 @@ public:
 	bool get_piste() const;
 
 	int trouver_place_libre();
+
+	void journal();
 
 	void décollage();
 

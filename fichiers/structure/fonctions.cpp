@@ -7,10 +7,10 @@ void Coord::set_y(int Y) {
 	y = Y;
 }
 
-const int Coord::get_x() {
+int Coord::get_x() const {
 	return x;
 }
-const int Coord::get_y() {
+int Coord::get_y() const {
 	return y;
 }
 
@@ -28,51 +28,51 @@ std::ostream& operator<<(std::ostream& os, const Coord& c) {
 //fonctions class Avion
 
 
-Coord avion::get_position() const {
+Coord Avion::get_position() const {
 	return position;
 }
-std::string avion::get_code() const {
+std::string Avion::get_code() const {
 	return code;
 }
-int avion::get_altitude() const {
+int Avion::get_altitude() const {
 	return altitude;
 }
-int avion::get_vitesse() const {
+int Avion::get_vitesse() const {
 	return vitesse;
 }
-std::string avion::get_destination() const {
+std::string Avion::get_destination() const {
 	return destination;
 }
-int avion::get_place_parking() const {
+int Avion::get_place_parking() const {
 	return place_parking;
 }
-int avion::get_carburant() const {
+int Avion::get_carburant() const {
 	return carburant;
 }
 
-void avion::set_position(const Coord& pos) {
+void Avion::set_position(const Coord& pos) {
 	position = pos;
 }
-void avion::set_code(const std::string& c) {
+void Avion::set_code(const std::string& c) {
 	code = c;
 }
-void avion::set_altitude(int alt) {
+void Avion::set_altitude(int alt) {
 	altitude = alt;
 }
-void avion::set_vitesse(int vit) {
+void Avion::set_vitesse(int vit) {
 	vitesse = vit;
 }
-void avion::set_destination(const std::string& dest) {
+void Avion::set_destination(const std::string& dest) {
 	destination = dest;
 }
-void avion::set_place_parking(int place) {
+void Avion::set_place_parking(int place) {
 	place_parking = place;
 }
-void avion::set_carburant(int carb) {
+void Avion::set_carburant(int carb) {
 	carburant = carb;
 }
 
-avion::avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init) : code(code_init), altitude(alt_init), vitesse(vit_init), position(pos_init), destination(dest_init), place_parking(parking_init), carburant(carb_init) {}
+Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init) : code(code_init), altitude(alt_init), vitesse(vit_init), position(pos_init), destination(dest_init), place_parking(parking_init), carburant(carb_init) {}
 
 
 //Fonctions TWR
