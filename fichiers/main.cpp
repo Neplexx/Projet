@@ -4,8 +4,6 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
-//#include "Plane.hpp"
-
 using namespace std;
 using namespace sf;
 
@@ -13,36 +11,56 @@ using namespace sf;
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #define _PATH_IMG_ "C:/Program Files/SFML/img/"
 #else
-// #define _PATH_IMG_ "../img/"
 #define _PATH_IMG_ "./img/"
 #endif
 
-const std::string path_image(PATH_IMG);
+const std::string path_image(_PATH_IMG_);
 
 int main() {
 
+    VideoMode desktop = VideoMode::getDesktopMode();
 
-    RenderWindow app(VideoMode({ 735, 633 }, 32), "My Camera");
-    app.setFramerateLimit(60); // limite la fenêtre à 60 images par seconde
+    RenderWindow app(desktop, "My Camera", State::Fullscreen);
+    app.setFramerateLimit(60);
 
     Texture backgroundImage;
     if (!backgroundImage.loadFromFile("C:/Users/ivill/source/repos/Projet/fichiers/assets/France.jpg"))
-        return -1; // Erreur chargement
+        return -1;
 
     Sprite backgroundSprite(backgroundImage);
+
+    // Calcul de l'échelle uniforme
+    Vector2u windowSize = app.getSize();
+    Vector2u textureSize = backgroundImage.getSize();
+
+    float scaleX = static_cast<float>(windowSize.x) / static_cast<float>(textureSize.x);
+    float scaleY = static_cast<float>(windowSize.y) / static_cast<float>(textureSize.y);
+    float scale = std::min(scaleX, scaleY);
+
+    backgroundSprite.setScale(Vector2f(scale, scale));
+
+    // Récupération des bounds après mise à l'échelle
+    FloatRect bounds = backgroundSprite.getGlobalBounds();
+
+   
+    // Centrer le sprite dans la fenêtre
+    backgroundSprite.setPosition(Vector2f(
+        (static_cast<float>(windowSize.x) - bounds.size.x) / 2.f,
+        (static_cast<float>(windowSize.y) - bounds.size.y) / 2.f
+    ));
 
     while (app.isOpen())
     {
         // Gestion des événements SFML 3
-        while (auto event = app.pollEvent())
+        while (const std::optional<Event> event = app.pollEvent())
         {
-            if (event->is<sf::Event::Closed>())
+            if (event->is<Event::Closed>())
                 app.close();
         }
 
-        app.clear();   // Vide la fenêtre
-		app.draw(backgroundSprite); // Dessine l'arrière-plan
-        app.display(); // Affiche le contenu (ici : rien)
+        app.clear();
+        app.draw(backgroundSprite);
+        app.display();
     }
 
     return 0;
