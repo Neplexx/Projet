@@ -48,6 +48,7 @@ public:
 
 	void set_carburant(int carb);
 	int get_carburant() const;
+	void consommation_carburant(Coord position, Coord ancienne_position) const;
 
 	Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init);
 };
