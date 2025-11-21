@@ -66,8 +66,7 @@ private:
     std::shared_ptr<DataHub> data; //protection au lieu de &
 
 public:
-    ThreadedAvion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init, std::shared_ptr<DataHub> sd);
-
+    
     void run();
     void start();
     void stop();
