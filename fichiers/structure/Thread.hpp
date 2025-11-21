@@ -9,6 +9,56 @@
 #include <map>
 #include <memory>
 
+struct AvionToAPP {
+    std::string avionCode;
+    Coord Position;
+    int Altitude;
+};
+
+struct APPToAvion {
+    std::string avionCode;
+    std::vector<Coord> trajectoire;
+    int objectifAltitude;
+};
+
+struct APPToTWR_DemandePiste {
+    std::string avionCode;
+};
+
+struct TWRToAPP_ReponsePiste {
+    std::string avionCode;
+    bool pisteLibre;
+};
+
+class DataHub {
+public:
+    std::queue<AvionToAPP> avion_appQueue;
+    std::mutex avion_appMutex;
+    std::condition_variable avion_appCondition;
+
+    // APP -> Avion
+    std::map<std::string, std::queue<APPToAvion>> app_avionQueue;
+    std::mutex app_avionMutex;
+    std::condition_variable app_avionCondition;
+
+    // APP -> TWR
+    std::queue<APPToTWR_DemandePiste> app_twrQueue;
+    std::mutex app_twrMutex;
+    std::condition_variable app_twrCondition;
+
+    // TWR -> APP
+    std::queue<TWRToAPP_ReponsePiste> twr_appQueue;
+    std::mutex twr_appMutex;
+    std::condition_variable twr_appCondition;
+
+    std::map<std::string, Coord> avions_positions; // Code avion -> Position
+    std::mutex avions_positionsMutex;
+
+    bool global_pisteLibre = true;
+    std::mutex global_pisteLibre_mutex;
+    std::condition_variable global_pisteLibreCondition;
+};
+
 class ThreadedAvion : public Avion {
 private:
     std::thread thread_;
@@ -73,56 +123,6 @@ public:
     void join();
 
     void set_piste(bool facteur);
-};
-
-struct AvionToAPP {
-    std::string avionCode;
-    Coord Position;
-    int Altitude;
-};
-
-struct APPToAvion {
-    std::string avionCode;
-    std::vector<Coord> trajectoire;
-    int objectifAltitude;
-};
-
-struct APPToTWR_DemandePiste {
-    std::string avionCode;
-};
-
-struct TWRToAPP_ReponsePiste {
-    std::string avionCode;
-    bool pisteLibre;
-};
-
-class DataHub {
-public:
-    std::queue<AvionToAPP> avion_appQueue;
-    std::mutex avion_appMutex;
-    std::condition_variable avion_appCondition;
-
-    // APP -> Avion
-    std::map<std::string, std::queue<APPToAvion>> app_avionQueue;
-    std::mutex app_avionMutex;
-    std::condition_variable app_avionCondition;
-
-    // APP -> TWR
-    std::queue<APPToTWR_DemandePiste> app_twrQueue;
-    std::mutex app_twrMutex;
-    std::condition_variable app_twrCondition;
-
-    // TWR -> APP
-    std::queue<TWRToAPP_ReponsePiste> twr_appQueue;
-    std::mutex twr_appMutex;
-    std::condition_variable twr_appCondition;
-
-    std::map<std::string, Coord> avions_positions; // Code avion -> Position
-    std::mutex avions_positionsMutex;
-
-    bool global_pisteLibre = true;
-    std::mutex global_pisteLibre_mutex;
-    std::condition_variable global_pisteLibreCondition;
 };
 
 class SimulationManager {
