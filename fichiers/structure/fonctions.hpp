@@ -65,6 +65,7 @@ public:
 	void envoie_infos_avion(); // envoie la trajectoire et altitude à suivre à l'avion après réception du signal
 	void piste_libre(); // demande à twr si la piste d'atterrissage est libre
 	void urgence();
+	void trajectoire_atterissage();
 };
 
 class TWR { //Dans aéroport
