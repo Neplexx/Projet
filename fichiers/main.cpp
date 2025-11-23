@@ -25,10 +25,6 @@ struct Ville {
     string cheminAeroport;
 };
 
-//C:\Users\ivill\Source\Repos\Projet\fichiers\main.cpp
-//
-//C:\Users\ivill\Source\Repos\Projet\fichiers\assets\France.jpg
-
 
 int main() {
 
@@ -38,14 +34,14 @@ int main() {
 
     //Charger la police
     Font font;
-    if (!font.openFromFile("assets/arial.ttf"))
+    if (!font.openFromFile(path_image + "arial.ttf"))
         return -1;
 
     //Etat actuel (0 = carte France, 1-6 = aéroports)
     int etatAct = 0;
 
     Texture backgroundImage;
-    if (!backgroundImage.loadFromFile("assets/France.jpg"))
+    if (!backgroundImage.loadFromFile(path_image + "France.jpg"))
         return -1;
 
     Sprite backgroundSprite(backgroundImage);
@@ -87,12 +83,12 @@ int main() {
 
     //Définir les villes avec leurs données
     vector<Ville> villes = {
-        {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), "assets/aeroport_lille.jpg"},
-        {"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), "assets/aeroport_paris.jpg"},
-        {"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), "assets/aeroport_strasbourg.jpg"},
-        {"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), "assets/aeroport_rennes.jpg"},
-        {"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), "assets/aeroport_nice.jpg"},
-        {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), "assets/aeroport_toulouse.jpg"}
+        {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        {"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        {"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        {"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        {"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "avion.png"}
     };
 
     // Configurer les marqueurs et textes
@@ -145,7 +141,7 @@ int main() {
                 }
                 // Clic droit pour revenir à la carte
                 else if (mouseEvent->button == Mouse::Button::Right && etatAct != 0) {
-                    updateBackground("C:/Users/ivill/source/repos/Projet/fichiers/assets/France.jpg");
+                    updateBackground(path_image + "France.jpg");
                     etatAct = 0;
                 }
             }
