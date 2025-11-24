@@ -72,7 +72,10 @@ public:
     void stop();
     void join();
 
-    void set_position(const Coord& pos);
+    void Set_position(const Coord& pos);
+
+    void message_de_APP();
+    void carburant_et_urgences();
 };
 
 class ThreadedCCR : public CCR {
@@ -88,6 +91,10 @@ public:
     void start();
     void stop();
     void join();
+
+    void trafic_national();
+    void gerer_planning();
+    void conflits();
 };
 
 class ThreadedAPP : public APP {
@@ -104,6 +111,13 @@ public:
     void start();
     void stop();
     void join();
+
+    void message_de_Avion();
+    void envoie_trajectoire_Avion();
+    void demande_piste_TWR(const std::string& code);
+    void message_de_TWR();
+    void trafic_aerien();
+    void collisions();
 };
 
 class ThreadedTWR : public TWR {
@@ -122,6 +136,9 @@ public:
     void join();
 
     void set_piste(bool facteur);
+    void message_de_APP();
+    void gerer_parking();
+    void gerer_decollages();
 };
 
 class SimulationManager {
