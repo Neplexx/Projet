@@ -5,7 +5,7 @@ if(MSVC)
     set(SFML_DIR "C:/Program Files/SFML_3.0.2/lib/cmake/SFML")
 endif(MSVC)
 
-    set(DEFS "PATH_IMG=\"${CMAKE_CURRENT_SOURCE_DIR}/assets/\"")
+    set(DEFS "PATH_IMG=\"${CMAKE_CURRENT_SOURCE_DIR}/fichiers/assets/\"")
     add_compile_definitions(${DEFS})
 
 set(SFML_STATIC_LIBRARIES ON)
