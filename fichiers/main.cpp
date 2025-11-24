@@ -9,12 +9,12 @@ using namespace sf;
 
 #ifdef _MSC_VER
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-#define _PATH_IMG_ "C:/Program Files/SFML/img/"
+//#define _PATH_IMG_ "C:/Program Files/SFML/img/"
 #else
-#define _PATH_IMG_ "./img/"
+#define _PATH_IMG_ "assets/"
 #endif
 
-const std::string path_image(_PATH_IMG_);
+const std::string path_image(PATH_IMG);
 
 //Structure pour gérer une ville
 struct Ville {
@@ -84,11 +84,11 @@ int main() {
     //Définir les villes avec leurs données
     vector<Ville> villes = {
         {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        {"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        {"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        {"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        {"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "avion.png"}
+        //{"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        //{"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        //{"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        //{"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
+        //{"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "avion.png"}
     };
 
     // Configurer les marqueurs et textes
