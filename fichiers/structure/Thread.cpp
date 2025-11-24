@@ -3,7 +3,7 @@
 void ThreadedAvion::run() {
 	while (!stop_thread_) {
 		//this->trajectoire_atterissage
-		AvionToAPP mess; //pour envoyer les données à l'APP voulue
+		AvionToAPP mess;
 		mess.avionCode = get_code();
 		mess.Position = get_position();
 		mess.Altitude = get_altitude();
@@ -114,8 +114,26 @@ void ThreadedCCR::join() {
 	}
 }
 
-void ThreadedCCR::trafic_national(){}
-void ThreadedCCR::gerer_planning(){}
+void ThreadedCCR::trafic_national(){
+	std::lock_guard<std::mutex> lock(shared_data_.avions_positionsMutex);
+
+	std::cout << "=== CCR SURVEILLANCE NATIONALE ===" << std::endl;
+
+	for (const auto& entry : shared_data_.avions_positions) {
+		std::cout << "CCR surveille: " << entry.first << " position: " << entry.second << " altitude: " << "N/A" << std::endl;
+	}
+
+	std::cout << "=================================" << std::endl;
+}
+
+void ThreadedCCR::gerer_planning(){
+	static int compteur_appel = 0;
+	if (compteur_appel % 20 == 0) {
+		planning();
+		std::cout << "CCR - Planning aérien mis à jour" << std::endl;
+	}
+	compteur_appel += 1;
+}
 void ThreadedCCR::conflits(){}
 
 //APP 
@@ -149,11 +167,57 @@ void ThreadedAPP::join() {
 	}
 }
 
-void ThreadedAPP::message_de_Avion(){}
-void ThreadedAPP::envoie_trajectoire_Avion(){}
-void ThreadedAPP::demande_piste_TWR(const std::string& code){}
+
+void ThreadedAPP::message_de_Avion() {
+	std::unique_lock<std::mutex> lock(shared_data_.avion_appMutex);
+
+	while (!shared_data_.avion_appQueue.empty()) {
+		AvionToAPP message = shared_data_.avion_appQueue.front();
+		shared_data_.avion_appQueue.pop();
+		lock.unlock();
+
+		std::cout << "APP " << nom_aeroport_ << " reçoit de " << message.avionCode << " position: " << message.Position << " altitude: " << message.Altitude << std::endl;
+
+		{
+			std::lock_guard<std::mutex> pos_lock(shared_data_.avions_positionsMutex);
+			shared_data_.avions_positions[message.avionCode] = message.Position;
+		}
+
+		if (message.Altitude <= 3000) {
+			envoie_trajectoire_Avion(message.avionCode);
+		}
+
+		if (message.Altitude <= 800) {
+			demande_piste_TWR(message.avionCode);
+		}
+
+		lock.lock();
+	}
+}
+void ThreadedAPP::envoie_trajectoire_Avion(const std::string& code){}
+
+void ThreadedAPP::demande_piste_TWR(const std::string& code) {
+	APPToTWR_DemandePiste demande;
+	demande.avionCode = code;
+
+	{
+		std::lock_guard<std::mutex> lock(shared_data_.app_twrMutex);
+		shared_data_.app_twrQueue.push(demande);
+	}
+	shared_data_.app_twrCondition.notify_one();
+
+	std::cout << "APP " << nom_aeroport_ << " demande piste pour " << code << std::endl;
+}
 void ThreadedAPP::message_de_TWR(){}
-void ThreadedAPP::trafic_aerien(){}
+
+void ThreadedAPP::trafic_aerien() {
+	std::lock_guard<std::mutex> lock(shared_data_.avions_positionsMutex);
+
+	int nb_avions = shared_data_.avions_positions.size();
+	if (nb_avions > 0) {
+		std::cout << "APP " << nom_aeroport_ << " - Trafic: " << nb_avions << " avions en approche" << std::endl;
+	}
+}
 void ThreadedAPP::collisions(){}
 
 
@@ -191,7 +255,18 @@ void ThreadedTWR::join() {
 	}
 }
 
-void ThreadedTWR::set_piste(bool facteur){}
+void ThreadedTWR::set_piste(bool facteur) {
+	std::lock_guard<std::mutex> lock(shared_data_.global_pisteLibre_mutex);
+	shared_data_.global_pisteLibre = facteur;
+
+	if (facteur) {
+		std::cout << "TWR " << nom_aeroport_ << " - Piste libérée" << std::endl;
+		shared_data_.global_pisteLibreCondition.notify_all();
+	}
+	else {
+		std::cout << "TWR " << nom_aeroport_ << " - Piste occupée" << std::endl;
+	}
+}
 void ThreadedTWR::message_de_APP(){}
 void ThreadedTWR::gerer_parking(){}
 void ThreadedTWR::gerer_decollages(){}

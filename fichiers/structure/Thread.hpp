@@ -113,7 +113,7 @@ public:
     void join();
 
     void message_de_Avion();
-    void envoie_trajectoire_Avion();
+    void envoie_trajectoire_Avion(const std::string& code);
     void demande_piste_TWR(const std::string& code);
     void message_de_TWR();
     void trafic_aerien();
