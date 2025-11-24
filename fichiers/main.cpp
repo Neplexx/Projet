@@ -54,17 +54,24 @@ int main() {
             Vector2u windowSize = app.getSize();
             Vector2u textureSize = backgroundImage.getSize();
 
-            float scaleX = static_cast<float>(windowSize.x) / static_cast<float>(textureSize.x);
-            float scaleY = static_cast<float>(windowSize.y) / static_cast<float>(textureSize.y);
+            // Calculer l'échelle pour afficher l'image en entier
+            float scaleX = static_cast<float>(windowSize.x) / textureSize.x;
+            float scaleY = static_cast<float>(windowSize.y) / textureSize.y;
             float scale = std::min(scaleX, scaleY);
 
-            backgroundSprite.setScale(Vector2f(scale, scale));
-            FloatRect bounds = backgroundSprite.getGlobalBounds();
-            backgroundSprite.setPosition(Vector2f(
-                (static_cast<float>(windowSize.x) - bounds.size.x) / 2.f,
-                (static_cast<float>(windowSize.y) - bounds.size.y) / 2.f));
+            // Méthode robuste : origine au centre de l'image
+            backgroundSprite.setOrigin({ textureSize.x / 2.f, textureSize.y / 2.f });
+
+            // Position au centre de l'écran
+            backgroundSprite.setPosition({ windowSize.x / 2.f, windowSize.y / 2.f });
+
+            // Appliquer l'échelle
+            backgroundSprite.setScale({ scale, scale });
         }
         };
+
+
+
 
     // Calcul de l'échelle uniforme
     Vector2u windowSize = app.getSize();
@@ -83,12 +90,12 @@ int main() {
 
     //Définir les villes avec leurs données
     vector<Ville> villes = {
-        {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        //{"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        //{"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        //{"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        //{"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "avion.png"},
-        //{"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "avion.png"}
+        {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"}
     };
 
     // Configurer les marqueurs et textes
