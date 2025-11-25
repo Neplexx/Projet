@@ -135,8 +135,8 @@ void CCR::calcul_trajectoire(Avion& avion) {
 	int y2 = avion.get_destination().get_y();
 	std::vector<Coord> path; // Stocke le chemin trouvé
 	// Simple ligne droite pour l'exemple
-	int dx = (x2 - x1) 
-	int dy = (y2 - y1) 
+	int dx = (x2 - x1);
+	int dy = (y2 - y1);
 	while (x1 != x2 || y1 != y2) {
 		path.push_back(Coord(x1, y1));
 		if (x1 != x2) x1 += dx;
