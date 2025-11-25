@@ -106,8 +106,17 @@ void CCR::planning() {
 	else {
 		std::cerr << "Erreur : impossible d'ouvrir le fichier planning.json\n";
 	}
+}
 
-
+void journal(const std::string& data) {
+	std::ofstream journal_f("journal.json", std::ios::app);
+	if (journal_f.is_open()) {
+		journal_f << data << std::endl;
+		journal_f.close();
+	}
+	else {
+		std::cerr << "Erreur : impossible d'ouvrir le fichier journal.log\n";
+	}
 }
 
 void CCR::calcul_trajectoire(Avion& avion) {
@@ -128,13 +137,12 @@ void CCR::calcul_trajectoire(Avion& avion) {
 	//définir chaque aéroport à une case
 	grille[avion.get_position().get_y()][avion.get_position().get_x()] = 2; // position actuelle
 	grille[avion.get_destination().get_y()][avion.get_destination().get_x()] = 3; // destination
-	// Implémentation de l'algorithme A*
+	
 	int x1 = avion.get_position().get_x();
 	int y1 = avion.get_position().get_y();
 	int x2 = avion.get_destination().get_x();
 	int y2 = avion.get_destination().get_y();
-	std::vector<Coord> path; // Stocke le chemin trouvé
-	// Simple ligne droite pour l'exemple
+	std::vector<Coord> path;
 	int dx = (x2 - x1);
 	int dy = (y2 - y1);
 	while (x1 != x2 || y1 != y2) {
@@ -142,11 +150,21 @@ void CCR::calcul_trajectoire(Avion& avion) {
 		if (x1 != x2) x1 += dx;
 		if (y1 != y2) y1 += dy;
 	}
-	// Afficher le chemin
-	std::cout << "Chemin trouvé : ";
-	for (const auto& coord : path) {
-		std::cout << coord << " ";
+	int steps = std::max(std::abs(dx), std::abs(dy));
+	
+	float stepX = static_cast<float>(dx) / steps;
+	float stepY = static_cast<float>(dy) / steps;
+
+	float current_x = x1;
+	float current_y = y1;
+
+	for (int i = 0; i <= steps; ++i) {
+		path.push_back(Coord(static_cast<int>(current_x), static_cast<int>(current_y)));
+		current_x += stepX;
+		current_y += stepY;
 	}
+
+	std::cout << std::endl;
 }
 
 //Fonctions TWR
