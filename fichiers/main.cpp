@@ -25,29 +25,39 @@ struct Ville {
     string cheminAeroport;
 };
 
-
-int main() {
-
+//Initialisation de la fenêtre
+RenderWindow initWindow() {
     VideoMode desktop = VideoMode::getDesktopMode();
     RenderWindow app(desktop, "My Camera", State::Fullscreen);
     app.setFramerateLimit(60);
+    return app;
+}
 
-    //Charger la police
+//Chargement police
+Font loadFont() {
     Font font;
     if (!font.openFromFile(path_image + "arial.ttf"))
-        return -1;
+        exit(-1);
+    return font;
+}
 
-    //Etat actuel (0 = carte France, 1-6 = aéroports)
-    int etatAct = 0;
-
+//Chargement de l'image de fond
+Texture loadBackgroundImage() {
     Texture backgroundImage;
     if (!backgroundImage.loadFromFile(path_image + "France.jpg"))
-        return -1;
+        exit(-1);
+    return backgroundImage;
+}
 
+//Initialisation de fond
+Sprite createBackgroundSprite(Texture& backgroundImage) {
     Sprite backgroundSprite(backgroundImage);
+    return backgroundSprite;
+}
 
-    //Fonction pour mettre le fond à jour
-    auto updateBackground = [&](const string& path) {
+//Mise à jour du fond
+auto makeUpdateBackground(RenderWindow& app, Texture& backgroundImage, Sprite& backgroundSprite) {
+    return [&](const string& path) {
         if (backgroundImage.loadFromFile(path)) {
             backgroundSprite.setTexture(backgroundImage);
 
@@ -68,12 +78,12 @@ int main() {
             backgroundSprite.setScale({ scale, scale });
         }
         };
+}
 
-
-    // Calcul de l'échelle uniforme
+// L'échelle et la position
+void updateScaleAndPosition(RenderWindow& app, Sprite& backgroundSprite, Texture& backgroundImage) {
     Vector2u windowSize = app.getSize();
     Vector2u textureSize = backgroundImage.getSize();
-
     float scaleX = static_cast<float>(windowSize.x) / static_cast<float>(textureSize.x);
     float scaleY = static_cast<float>(windowSize.y) / static_cast<float>(textureSize.y);
     float scale = std::min(scaleX, scaleY);
@@ -84,9 +94,11 @@ int main() {
         (static_cast<float>(windowSize.x) - bounds.size.x) / 2.f,
         (static_cast<float>(windowSize.y) - bounds.size.y) / 2.f
     ));
+}
 
-    //Définir les villes avec leurs données
-    vector<Ville> villes = {
+//Les villes
+vector<Ville> createVilles(Font& font) {
+    return {
         {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
         {"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
         {"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
@@ -94,10 +106,11 @@ int main() {
         {"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
         {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"}
     };
+}
 
-    //les marqueurs et textes
+//Tous les marqueurs et textes des villes
+void initMarkersTexts(vector<Ville>& villes, Sprite& backgroundSprite, FloatRect bounds) {
     for (auto& ville : villes) {
-        //Marqueur
         ville.marqueur.setFillColor(Color::Red);
         ville.marqueur.setOutlineThickness(2.f);
         ville.marqueur.setOutlineColor(Color::Black);
@@ -115,7 +128,11 @@ int main() {
         ville.texte.setOutlineColor(Color::Black);
         ville.texte.setPosition(Vector2f(X + 15.f, Y - 10.f));
     }
+}
 
+//Fenêtre principale
+template<typename F>
+void runApp(RenderWindow& app, Sprite& backgroundSprite, vector<Ville>& villes, F updateBackground, int& etatAct) {
     while (app.isOpen()) {
         while (const std::optional<Event> event = app.pollEvent()) {
             if (event->is<Event::Closed>())
@@ -167,6 +184,28 @@ int main() {
 
         app.display();
     }
+}
+
+int main() {
+    RenderWindow app = initWindow();
+
+    Font font = loadFont();
+
+    int etatAct = 0;
+
+    Texture backgroundImage = loadBackgroundImage();
+    Sprite backgroundSprite = createBackgroundSprite(backgroundImage);
+
+    auto updateBackground = makeUpdateBackground(app, backgroundImage, backgroundSprite);
+
+    updateScaleAndPosition(app, backgroundSprite, backgroundImage);
+    FloatRect bounds = backgroundSprite.getGlobalBounds();
+
+    vector<Ville> villes = createVilles(font);
+
+    initMarkersTexts(villes, backgroundSprite, bounds);
+
+    runApp(app, backgroundSprite, villes, updateBackground, etatAct);
 
     return 0;
 }
