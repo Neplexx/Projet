@@ -29,6 +29,7 @@ private:
 	int place_parking;
 	int carburant;
 public:
+	Avion() = default;
 	void set_position(const Coord& pos);
 	Coord get_position() const;
 

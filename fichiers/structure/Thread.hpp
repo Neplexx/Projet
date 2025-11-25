@@ -66,6 +66,7 @@ private:
     std::shared_ptr<DataHub> data; //protection au lieu de &
 
 public:
+    ThreadedAvion(std::shared_ptr<DataHub> hub);
     
     void run();
     void start();
@@ -76,6 +77,7 @@ public:
 
     void message_de_APP();
     void carburant_et_urgences();
+    void avancer();
 };
 
 class ThreadedCCR : public CCR {
@@ -103,9 +105,10 @@ private:
     std::atomic<bool> stop_thread_;
     DataHub& shared_data_;
     std::string nom_aeroport_;
+    Coord position_aeroport_;
 
 public:
-    ThreadedAPP(const std::string& nom_aeroport, DataHub& sd);
+    ThreadedAPP(const std::string& nom_aeroport, Coord position, DataHub& sd);
 
     void run();
     void start();

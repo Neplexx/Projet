@@ -82,6 +82,23 @@ void ThreadedAvion::carburant_et_urgences() {
 		stop_thread_ = true;
 	}
 }
+void ThreadedAvion::avancer() {
+	int dx = get_destination().get_x() - get_position().get_x();
+	int dy = get_destination().get_y() - get_position().get_y();
+
+	float distance = std::sqrt(dx * dx + dy * dy);
+
+	if (distance > 5) {
+		float ratio = (get_vitesse() * 0.05f) / distance;
+		int moveX = static_cast<int>(dx * ratio);
+		int moveY = static_cast<int>(dy * ratio);
+
+		Coord nouvellePos(get_position().get_x() + moveX, get_position().get_y() + moveY);
+		set_position(nouvellePos);
+	}
+}
+
+ThreadedAvion::ThreadedAvion(std::shared_ptr<DataHub> hub) : data(hub) {}
 
 //CCR 
 
@@ -138,7 +155,7 @@ void ThreadedCCR::conflits(){}
 
 //APP 
 
-ThreadedAPP::ThreadedAPP(const std::string& nom_aeroport, DataHub& sd) : APP(), shared_data_(sd), nom_aeroport_(nom_aeroport) {}
+ThreadedAPP::ThreadedAPP(const std::string& nom_aeroport, Coord pos_aero, DataHub& sd) : APP(), shared_data_(sd), nom_aeroport_(nom_aeroport), position_aeroport_(pos_aero) {}
 
 void ThreadedAPP::run() {
 	std::cout << "APP " << nom_aeroport_ << " démarrée" << std::endl;
@@ -167,7 +184,6 @@ void ThreadedAPP::join() {
 	}
 }
 
-
 void ThreadedAPP::message_de_Avion() {
 	std::unique_lock<std::mutex> lock(shared_data_.avion_appMutex);
 
@@ -175,22 +191,27 @@ void ThreadedAPP::message_de_Avion() {
 		AvionToAPP message = shared_data_.avion_appQueue.front();
 		shared_data_.avion_appQueue.pop();
 		lock.unlock();
-
-		std::cout << "APP " << nom_aeroport_ << " reçoit de " << message.avionCode << " position: " << message.Position << " altitude: " << message.Altitude << std::endl;
-
 		{
-			std::lock_guard<std::mutex> pos_lock(shared_data_.avions_positionsMutex);
+			std::lock_guard<std::mutex> position_lock(shared_data_.avions_positionsMutex);
 			shared_data_.avions_positions[message.avionCode] = message.Position;
 		}
 
-		if (message.Altitude <= 3000) {
-			envoie_trajectoire_Avion(message.avionCode);
-		}
+		double distance = std::sqrt(
+			std::pow(message.Position.get_x() - position_aeroport_.get_x(), 2) +
+			std::pow(message.Position.get_y() - position_aeroport_.get_y(), 2)
+		);
 
-		if (message.Altitude <= 800) {
-			demande_piste_TWR(message.avionCode);
-		}
+		if (distance < 50.0) {
+			std::cout << "APP " << nom_aeroport_ << " : Avion " << message.avionCode << " est proche (" << distance << "). ATTERRISSAGE AUTORISE !" << std::endl;
+			{
+				std::lock_guard<std::mutex> position_lock(shared_data_.avions_positionsMutex);
+				shared_data_.avions_positions.erase(message.avionCode);
+			}
 
+			// passer "parking"
+		}
+		else {
+		}
 		lock.lock();
 	}
 }
