@@ -54,23 +54,20 @@ int main() {
             Vector2u windowSize = app.getSize();
             Vector2u textureSize = backgroundImage.getSize();
 
-            // Calculer l'échelle pour afficher l'image en entier
+            //Calcul de l'échelle 
             float scaleX = static_cast<float>(windowSize.x) / textureSize.x;
             float scaleY = static_cast<float>(windowSize.y) / textureSize.y;
             float scale = std::min(scaleX, scaleY);
 
-            // Méthode robuste : origine au centre de l'image
             backgroundSprite.setOrigin({ textureSize.x / 2.f, textureSize.y / 2.f });
 
-            // Position au centre de l'écran
+            //Centrer
             backgroundSprite.setPosition({ windowSize.x / 2.f, windowSize.y / 2.f });
 
-            // Appliquer l'échelle
+            //Mise à l'échelle
             backgroundSprite.setScale({ scale, scale });
         }
         };
-
-
 
 
     // Calcul de l'échelle uniforme
@@ -98,9 +95,9 @@ int main() {
         {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"}
     };
 
-    // Configurer les marqueurs et textes
+    //les marqueurs et textes
     for (auto& ville : villes) {
-        // Marqueur
+        //Marqueur
         ville.marqueur.setFillColor(Color::Red);
         ville.marqueur.setOutlineThickness(2.f);
         ville.marqueur.setOutlineColor(Color::Black);
@@ -111,7 +108,6 @@ int main() {
         ville.marqueur.setOrigin(Vector2f(ville.marqueur.getRadius(), ville.marqueur.getRadius()));
         ville.marqueur.setPosition(Vector2f(X, Y));
 
-        // Texte
         ville.texte.setString(ville.nom);
         ville.texte.setCharacterSize(20);
         ville.texte.setFillColor(Color::Black);
@@ -120,25 +116,29 @@ int main() {
         ville.texte.setPosition(Vector2f(X + 15.f, Y - 10.f));
     }
 
-    while (app.isOpen())
-    {
-        // Gestion des événements SFML 3
-        while (const std::optional<Event> event = app.pollEvent())
-        {
+    while (app.isOpen()) {
+        while (const std::optional<Event> event = app.pollEvent()) {
             if (event->is<Event::Closed>())
                 app.close();
 
-            // Détecter les clics de souris DANS la boucle d'événements
+            if (event->is<Event::KeyPressed>()) {
+                const auto& keyEvent = event->getIf<Event::KeyPressed>();
+                if (keyEvent->code == Keyboard::Key::Escape) {
+                    app.close();
+                }
+            }
+
+            //Détecter les clics
             if (event->is<Event::MouseButtonPressed>()) {
                 const auto& mouseEvent = event->getIf<Event::MouseButtonPressed>();
                 if (mouseEvent->button == Mouse::Button::Left) {
                     Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
                         static_cast<float>(mouseEvent->position.y));
 
-                    // Vérifier si on clique sur une ville
+                    //Vérifier si on clique sur une ville
                     if (etatAct == 0) {
                         for (size_t i = 0; i < villes.size(); ++i) {
-                            if (villes[i].marqueur.getGlobalBounds().contains(mousePos)) {
+                            if (villes[i].marqueur.getGlobalBounds().contains(mousePos) || villes[i].texte.getGlobalBounds().contains(mousePos)) {
                                 updateBackground(villes[i].cheminAeroport);
                                 etatAct = i + 1;
                                 break;
@@ -146,7 +146,7 @@ int main() {
                         }
                     }
                 }
-                // Clic droit pour revenir à la carte
+                //Clic droit pour revenir à la carte
                 else if (mouseEvent->button == Mouse::Button::Right && etatAct != 0) {
                     updateBackground(path_image + "France.jpg");
                     etatAct = 0;
@@ -157,7 +157,7 @@ int main() {
         app.clear();
         app.draw(backgroundSprite);
 
-        // Dessiner marqueurs et noms seulement sur la carte de France
+        //Dessiner marqueurs et noms 
         if (etatAct == 0) {
             for (const auto& ville : villes) {
                 app.draw(ville.marqueur);

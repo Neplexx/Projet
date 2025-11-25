@@ -25,7 +25,7 @@ private:
 	int altitude;
 	int vitesse;
 	Coord position;
-	std::string destination;
+	Coord destination;
 	int place_parking;
 	int carburant;
 public:
@@ -41,8 +41,8 @@ public:
 	void set_vitesse(int vit);
 	int get_vitesse() const;
 
-	void set_destination(const std::string& dest);
-	std::string get_destination() const;
+	void set_destination(const Coord& dest);
+	Coord get_destination() const;
 
 	void set_place_parking(int place);
 	int get_place_parking() const;
@@ -50,7 +50,7 @@ public:
 	void set_carburant(int carb);
 	int get_carburant() const;
 
-	Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const std::string& dest_init, int parking_init, int carb_init);
+	Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const Coord& dest_init, int parking_init, int carb_init);
 };
 
 class CCR { //International
