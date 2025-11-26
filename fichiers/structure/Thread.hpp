@@ -84,10 +84,10 @@ class ThreadedCCR : public CCR {
 private:
     std::thread thread_;
     std::atomic<bool> stop_thread_;
-    DataHub& shared_data_;
+    std::shared_ptr<DataHub> shared_data_;
 
 public:
-    ThreadedCCR(DataHub& sd);
+    ThreadedCCR(std::shared_ptr<DataHub> sd);
 
     void run();
     void start();
@@ -103,12 +103,13 @@ class ThreadedAPP : public APP {
 private:
     std::thread thread_;
     std::atomic<bool> stop_thread_;
-    DataHub& shared_data_;
+    std::shared_ptr<DataHub> shared_data_;
     std::string nom_aeroport_;
     Coord position_aeroport_;
+    void envoie_trajectoire_circulaire(const std::string& code, const Coord& position_actuelle);
 
 public:
-    ThreadedAPP(const std::string& nom_aeroport, Coord position, DataHub& sd);
+    ThreadedAPP(const std::string& nom_aeroport, Coord position, std::shared_ptr<DataHub> sd);
 
     void run();
     void start();
@@ -118,7 +119,7 @@ public:
     void message_de_Avion();
     void envoie_trajectoire_Avion(const std::string& code);
     void demande_piste_TWR(const std::string& code);
-    void message_de_TWR();
+	void message_de_TWR();
     void trafic_aerien();
     void collisions();
 };
@@ -127,11 +128,11 @@ class ThreadedTWR : public TWR {
 private:
     std::thread thread_;
     std::atomic<bool> stop_thread_;
-    DataHub& shared_data_;
+    std::shared_ptr<DataHub> shared_data_;
     std::string nom_aeroport_;
 
 public:
-    ThreadedTWR(int nb_places, const std::string& nom_a, DataHub& sd);
+    ThreadedTWR(int nb_places, const std::string& nom_a, std::shared_ptr<DataHub> sd);
 
     void run();
     void start();
@@ -146,16 +147,19 @@ public:
 
 class SimulationManager {
 private:
-    std::vector<ThreadedAvion> avions;
-    std::vector<ThreadedCCR> ccrs;
-    std::vector<ThreadedAPP> apps;
-    std::vector<ThreadedTWR> twrs;
-    DataHub shared_data;
+    std::vector<std::unique_ptr<ThreadedAvion>> avions;
+    std::vector<std::unique_ptr<ThreadedCCR>> ccrs;
+    std::vector<std::unique_ptr<ThreadedAPP>> apps;
+    std::vector<std::unique_ptr<ThreadedTWR>> twrs;
+    std::shared_ptr<DataHub> shared_data;
 
 public:
-    SimulationManager();
-     
-    void addAvion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init,const std::string& dest_init, int parking_init, int carb_init);
+    SimulationManager() : shared_data(std::make_shared<DataHub>()) {}
+
+    void addAvion(const std::string& code_init, int alt_init, int vit_init,
+        const Coord& pos_init, const std::string& dest_init,
+        int parking_init, int carb_init);
+
     void addCCR();
     void addAPP(const std::string& airport_name);
     void addTWR(int nb_places, const std::string& airport_name);

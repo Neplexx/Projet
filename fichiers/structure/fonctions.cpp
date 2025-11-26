@@ -27,7 +27,6 @@ std::ostream& operator<<(std::ostream& os, const Coord& c) {
 
 //fonctions class Avion
 
-
 Coord Avion::get_position() const {
 	return position;
 }
