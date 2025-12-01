@@ -97,24 +97,45 @@ void CCR::planning() {
 				});
 		}
 	}
-	std::fstream file("schedules.json", std::ios::in | std::ios::trunc);
+	std::string filepath = "planning.json";  // Dans le répertoire courant
+
+	std::ofstream file(filepath);
 	if (file.is_open()) {
-		file << planning.dump(4); // écrit le JSON avec indentation
-		file.close();             // facultatif, mais propre
+		file << planning.dump(4);
+		file.close();
+		std::cout << "Planning sauvegardé dans " << filepath << std::endl;
 	}
 	else {
-		std::cerr << "Erreur : impossible d'ouvrir le fichier planning.json\n";
+#ifdef _WIN32
+		system("mkdir . 2>nul");
+#else
+		system("mkdir -p .");
+#endif
+		// Réessayer
+		std::ofstream file2(filepath);
+		if (file2.is_open()) {
+			file2 << planning.dump(4);
+			file2.close();
+		}
 	}
 }
 
-void journal(const std::string& data) {
+void journal(const std::string& type, const std::string& id, const std::string& action, const std::string& details = "") {
+	using json = nlohmann::json;
+	json log_entry = {
+		{"timestamp", std::to_string(std::time(nullptr))},
+		{"type", type},
+		{"id", id},
+		{"action", action},
+		{"details", details}
+	};
 	std::ofstream journal_f("journal.json", std::ios::app);
 	if (journal_f.is_open()) {
-		journal_f << data << std::endl;
+		journal_f << log_entry.dump() << ",\n";
 		journal_f.close();
 	}
 	else {
-		std::cerr << "Erreur : impossible d'ouvrir le fichier journal.log\n";
+		std::cerr << "Erreur : impossible d'ouvrir le fichier journal.json\n";
 	}
 }
 

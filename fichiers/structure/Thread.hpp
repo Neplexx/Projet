@@ -8,6 +8,7 @@
 #include <queue>
 #include <map>
 #include <memory>
+#include <set>
 
 struct AvionToAPP {
     std::string avionCode;
@@ -167,3 +168,5 @@ public:
     void startSimulation();
     void stopSimulation();
 };
+
+Coord convertirCoordonneesRelatives(float relX, float relY, int largeurFenetre = 1920, int hauteurFenetre = 1080);
