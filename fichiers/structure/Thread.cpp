@@ -107,7 +107,6 @@ void ThreadedAvion::carburant_et_urgences() {
 }
 
 void ThreadedAvion::avancer() {
-    // Si le thread est déjà arrêté (atterri), ne rien faire
     if (stop_thread_) {
         return;
     }
@@ -121,14 +120,10 @@ void ThreadedAvion::avancer() {
 
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    // ===== DÉTERMINER L'AÉROPORT DE DESTINATION =====
-    // ===== DÉTERMINER L'AÉROPORT DE DESTINATION =====
     std::string aeroport_destination = "INCONNU";
 
-    // Tolérance de 10 pixels pour la détection
     const int TOLERANCE = 10;
 
-    // Coordonnées des aéroports avec tolérance
     if (std::abs(destination_actuelle.get_x() - 960) <= TOLERANCE &&
         std::abs(destination_actuelle.get_y() - 270) <= TOLERANCE) {
         aeroport_destination = "PARIS";
@@ -154,11 +149,9 @@ void ThreadedAvion::avancer() {
         aeroport_destination = "TOULOUSE";
     }
 
-    // ===== ATTERRISSAGE =====
-    // Si très proche de la destination (prêt à atterrir)
+	//Atterrissage
     if (distance < 5) {
         if (!stop_thread_) {
-            // Message d'atterrissage avec le bon aéroport
             std::cout << "\n" << std::string(50, '=') << std::endl;
             std::cout << "   AVION " << get_code() << " ATTERRIT A " << aeroport_destination << std::endl;
             std::cout << "   Position finale: " << position_actuelle << std::endl;
@@ -180,7 +173,6 @@ void ThreadedAvion::avancer() {
             // 3. Supprimer des autres structures si nécessaire
             {
                 std::lock_guard<std::mutex> lock(data->avion_appMutex);
-                // Nettoyer les messages en attente de cet avion
                 std::queue<AvionToAPP> temp_queue;
                 while (!data->avion_appQueue.empty()) {
                     AvionToAPP msg = data->avion_appQueue.front();
@@ -199,17 +191,13 @@ void ThreadedAvion::avancer() {
             std::cout << "Avion " << get_code()
                 << " retiré de toutes les surveillances." << std::endl;
 
-            return; // Sortir immédiatement
+            return;
         }
         return;
     }
 
-    // ===== MOUVEMENT NORMAL =====
     if (distance > 2) {
         float vitesse = get_vitesse();
-
-        // ===== EVITEMENT DES COLLISIONS =====
-        // Déclarer warnings_cooldown AVANT le bloc pour qu'il soit accessible après
         static std::map<std::string, int> warnings_cooldown;
 
         {
@@ -221,18 +209,16 @@ void ThreadedAvion::avancer() {
                     float distance_autre = std::sqrt(dx_autre * dx_autre + dy_autre * dy_autre);
 
                     // Si trop proche d'un autre avion
-                    if (distance_autre < 25.0) {  // Seuil à 25 pixels
-                        // Réduire la vitesse significativement
+                    if (distance_autre < 25.0) {
                         vitesse = vitesse * 0.4f;
 
                         // Ajuster la direction pour s'éloigner
-                        float force_repulsion = 15.0f / distance_autre;  // Plus on est proche, plus on s'éloigne
+                        float force_repulsion = 15.0f / distance_autre;
                         dx -= static_cast<int>((entry.second.get_x() - position_actuelle.get_x()) * force_repulsion);
                         dy -= static_cast<int>((entry.second.get_y() - position_actuelle.get_y()) * force_repulsion);
 
-                        // Message d'avertissement (limité pour éviter le spam)
                         if (warnings_cooldown[entry.first] <= 0) {
-                            std::cout << "⚠️ Avion " << get_code() << " évite " << entry.first
+                            std::cout << " ! Avion " << get_code() << " évite " << entry.first
                                 << " (distance: " << distance_autre << "px)" << std::endl;
                             warnings_cooldown[entry.first] = 20;  // Cooldown de 20 itérations
                         }
@@ -241,20 +227,16 @@ void ThreadedAvion::avancer() {
             }
         }
 
-        // Décrémenter les cooldowns (maintenant accessible)
         for (auto& pair : warnings_cooldown) {
             if (pair.second > 0) pair.second--;
         }
 
-        // Recalculer la distance après ajustement pour évitement
         distance = std::sqrt(dx * dx + dy * dy);
         if (distance == 0) distance = 1;  // Éviter la division par zéro
 
-        // ===== CALCUL DU MOUVEMENT =====
-        // Ajustement de la vitesse en fonction de la distance
+        //Calcul mouvement
         float vitesse_ajustee = vitesse;
         if (distance < 100) {
-            // Ralentir en approche finale
             vitesse_ajustee = vitesse * (distance / 100.0f);
         }
 
@@ -266,7 +248,7 @@ void ThreadedAvion::avancer() {
         if (moveX == 0 && dx != 0) moveX = (dx > 0) ? 1 : -1;
         if (moveY == 0 && dy != 0) moveY = (dy > 0) ? 1 : -1;
 
-        // ===== APPLICATION DU MOUVEMENT =====
+        // Mouvement
         Coord nouvellePos(position_actuelle.get_x() + moveX,
             position_actuelle.get_y() + moveY);
         set_position(nouvellePos);
@@ -277,11 +259,10 @@ void ThreadedAvion::avancer() {
             data->avions_positions[get_code()] = nouvellePos;
         }
 
-        // ===== LOGS OCCASIONNELS =====
+        // ===== LOGS =====
         static int log_counter = 0;
         log_counter++;
 
-        // Log détaillé toutes les 50 itérations
         if (log_counter % 50 == 0) {
             std::cout << "\n[Avion " << get_code() << "]" << std::endl;
             std::cout << "  Position: " << nouvellePos << std::endl;
@@ -291,18 +272,14 @@ void ThreadedAvion::avancer() {
             std::cout << "  Carburant: " << get_carburant() << std::endl;
         }
 
-        // Log simple toutes les 10 itérations
         else if (log_counter % 10 == 0 && distance < 300) {
             std::cout << "Avion " << get_code()
                 << " → " << aeroport_destination << " (distance: " << (int)distance << "px)" << std::endl;
         }
 
-        // Reset du compteur pour éviter les débordements
         if (log_counter > 1000) log_counter = 0;
     }
     else {
-        // Très proche mais pas encore à la distance d'atterrissage
-        // Juste attendre le prochain cycle
         if (rand() % 20 == 0) {
             std::cout << "Avion " << get_code()
                 << " en approche finale à " << aeroport_destination
@@ -436,7 +413,6 @@ void ThreadedAPP::message_de_Avion() {
             << "ft" << std::endl;
 
         if (distance < SEUIL_ATTERRISSAGE) {
-            // Prêt pour atterrissage
             if (avions_en_atterrissage.find(message.avionCode) == avions_en_atterrissage.end()) {
                 std::cout << "APP " << nom_aeroport_ << " : Demande atterrissage pour "
                     << message.avionCode << std::endl;
@@ -446,7 +422,6 @@ void ThreadedAPP::message_de_Avion() {
 
         }
         else if (distance < SEUIL_FINAL) {
-            // Approche finale
             std::cout << "APP " << nom_aeroport_ << " : Approche finale pour "
                 << message.avionCode << std::endl;
 
@@ -464,8 +439,7 @@ void ThreadedAPP::message_de_Avion() {
             shared_data_->app_avionCondition.notify_one();
 
         }
-        else if (distance < SEUIL_APPROCHE) {
-            // Mise en attente
+        else if (distance < SEUIL_APPROCHE) {// Mise en attente
             if (avions_en_attente.find(message.avionCode) == avions_en_attente.end()) {
                 std::cout << "APP " << nom_aeroport_ << " : Mise en attente circulaire pour "
                     << message.avionCode << std::endl;
@@ -583,7 +557,7 @@ void ThreadedAPP::collisions() {
             int dy = pos1.get_y() - pos2.get_y();
             float distance = std::sqrt(dx * dx + dy * dy);
 
-            if (distance < 15) {  // Seuil augmenté à 15px
+            if (distance < 15) {
                 std::cout << "\nAPP " << nom_aeroport_ << " : ALERTE COLLISION entre "
                     << avions_en_vol[i].first << " et " << avions_en_vol[j].first
                     << " (distance: " << distance << "px)" << std::endl;
