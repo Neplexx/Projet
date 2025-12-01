@@ -14,7 +14,7 @@ int Coord::get_y() const {
 	return y;
 }
 
-Coord::Coord(int X, int Y) : x(X) , y(X) {}
+Coord::Coord(int X, int Y) : x(X) , y(Y) {}
 
 bool Coord::operator==(const Coord& other) const { 
 	return x == other.x && y == other.y; 
