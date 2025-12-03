@@ -123,29 +123,29 @@ void ThreadedAvion::avancer() {
     std::string aeroport_destination = "INCONNU";
 
     const int TOLERANCE = 10;
-
-    if (std::abs(destination_actuelle.get_x() - 950) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 280) <= TOLERANCE) {
-        aeroport_destination = "PARIS";
-    }
-    else if (std::abs(destination_actuelle.get_x() - 1370) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 896) <= TOLERANCE) {
-        aeroport_destination = "NICE";
-    }
-    else if (std::abs(destination_actuelle.get_x() - 1000) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 54) <= TOLERANCE) {
+    
+    if (std::abs(destination_actuelle.get_x() - static_cast<int>(0.54f * 1920)) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - static_cast<int>(0.05f * 1080)) <= TOLERANCE) {
         aeroport_destination = "LILLE";
     }
-    else if (std::abs(destination_actuelle.get_x() - 1382) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 291) <= TOLERANCE) {
+    else if (std::abs(destination_actuelle.get_x() - static_cast<int>(0.5f * 1920)) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - static_cast<int>(0.25f * 1080)) <= TOLERANCE) {
+        aeroport_destination = "PARIS";
+    }
+    else if (std::abs(destination_actuelle.get_x() - static_cast<int>(0.84f * 1920)) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - static_cast<int>(0.27f * 1080)) <= TOLERANCE) {
         aeroport_destination = "STRASBOURG";
     }
-    else if (std::abs(destination_actuelle.get_x() - 581) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 367) <= TOLERANCE) {
+    else if (std::abs(destination_actuelle.get_x() - static_cast<int>(0.23f * 1920)) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - static_cast<int>(0.34f * 1080)) <= TOLERANCE) {
         aeroport_destination = "RENNES";
     }
-    else if (std::abs(destination_actuelle.get_x() - 868) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 918) <= TOLERANCE) {
+    else if (std::abs(destination_actuelle.get_x() - static_cast<int>(0.83f * 1920)) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - static_cast<int>(0.83f * 1080)) <= TOLERANCE) {
+        aeroport_destination = "NICE";
+    }
+    else if (std::abs(destination_actuelle.get_x() - static_cast<int>(0.40f * 1920)) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - static_cast<int>(0.85f * 1080)) <= TOLERANCE) {
         aeroport_destination = "TOULOUSE";
     }
 
