@@ -6,14 +6,6 @@
 #include <cstdlib>
 #include <set>
 
-Coord convertirCoordonneesRelatives(float relX, float relY,
-    int largeurFenetre,
-    int hauteurFenetre) {
-    int x = static_cast<int>(relX * largeurFenetre);
-    int y = static_cast<int>(relY * hauteurFenetre);
-    return Coord(x, y);
-}
-
 void ThreadedAvion::run() {
     while (!stop_thread_) {
         if (stop_thread_) {
@@ -124,27 +116,27 @@ void ThreadedAvion::avancer() {
 
     const int TOLERANCE = 10;
 
-    if (std::abs(destination_actuelle.get_x() - 960) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 270) <= TOLERANCE) {
+    if (std::abs(destination_actuelle.get_x() - 950) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - 280) <= TOLERANCE) {
         aeroport_destination = "PARIS";
     }
-    else if (std::abs(destination_actuelle.get_x() - 1594) <= TOLERANCE &&
+    else if (std::abs(destination_actuelle.get_x() - 1370) <= TOLERANCE &&
         std::abs(destination_actuelle.get_y() - 896) <= TOLERANCE) {
         aeroport_destination = "NICE";
     }
-    else if (std::abs(destination_actuelle.get_x() - 1037) <= TOLERANCE &&
+    else if (std::abs(destination_actuelle.get_x() - 1000) <= TOLERANCE &&
         std::abs(destination_actuelle.get_y() - 54) <= TOLERANCE) {
         aeroport_destination = "LILLE";
     }
-    else if (std::abs(destination_actuelle.get_x() - 1613) <= TOLERANCE &&
-        std::abs(destination_actuelle.get_y() - 292) <= TOLERANCE) {
+    else if (std::abs(destination_actuelle.get_x() - 1382) <= TOLERANCE &&
+        std::abs(destination_actuelle.get_y() - 291) <= TOLERANCE) {
         aeroport_destination = "STRASBOURG";
     }
-    else if (std::abs(destination_actuelle.get_x() - 442) <= TOLERANCE &&
+    else if (std::abs(destination_actuelle.get_x() - 581) <= TOLERANCE &&
         std::abs(destination_actuelle.get_y() - 367) <= TOLERANCE) {
         aeroport_destination = "RENNES";
     }
-    else if (std::abs(destination_actuelle.get_x() - 768) <= TOLERANCE &&
+    else if (std::abs(destination_actuelle.get_x() - 868) <= TOLERANCE &&
         std::abs(destination_actuelle.get_y() - 918) <= TOLERANCE) {
         aeroport_destination = "TOULOUSE";
     }
@@ -701,19 +693,19 @@ void SimulationManager::addAvion(const std::string& code_init, int alt_init, int
     int parking_init, int carb_init) {
     Coord destination;
     if (dest_init == "Paris")
-        destination = convertirCoordonneesRelatives(0.5f, 0.25f, 1920, 1080);
+        destination = (950.0f, 280.0f);
     else if (dest_init == "Nice")
-        destination = convertirCoordonneesRelatives(0.83f, 0.83f, 1920, 1080);
+        destination = (1370.6f, 896.4f);
     else if (dest_init == "Lille")
-        destination = convertirCoordonneesRelatives(0.54f, 0.05f, 1920, 1080);
+        destination = (1000.8f, 54.0f);
     else if (dest_init == "Strasbourg")
-        destination = convertirCoordonneesRelatives(0.84f, 0.27f, 1920, 1080);
+        destination = (1382.8f, 291.6f);
     else if (dest_init == "Rennes")
-        destination = convertirCoordonneesRelatives(0.23f, 0.34f, 1920, 1080);
+        destination = (581.6f, 367.2f);
     else if (dest_init == "Toulouse")
-        destination = convertirCoordonneesRelatives(0.40f, 0.85f, 1920, 1080);
+        destination = (868.0f, 918.0f);
     else
-        destination = convertirCoordonneesRelatives(0.5f, 0.25f, 1920, 1080);
+        destination = (950.0f, 280.0f);
 
     auto avion = std::make_unique<ThreadedAvion>(shared_data);
     avion->set_code(code_init);
@@ -735,19 +727,19 @@ void SimulationManager::addCCR() {
 void SimulationManager::addAPP(const std::string& airport_name) {
     Coord position_aero;
     if (airport_name == "Paris")
-        position_aero = convertirCoordonneesRelatives(0.5f, 0.25f, 1920, 1080);
+        position_aero = (950.0f, 280.0f);
     else if (airport_name == "Nice")
-        position_aero = convertirCoordonneesRelatives(0.83f, 0.83f, 1920, 1080);
+        position_aero = (1370.6f, 896.4f);
     else if (airport_name == "Lille")
-        position_aero = convertirCoordonneesRelatives(0.54f, 0.05f, 1920, 1080);
+        position_aero = (1000.8f, 54.0f);
     else if (airport_name == "Strasbourg")
-        position_aero = convertirCoordonneesRelatives(0.84f, 0.27f, 1920, 1080);
+        position_aero = (1382.8f, 291.6f);
     else if (airport_name == "Rennes")
-        position_aero = convertirCoordonneesRelatives(0.23f, 0.34f, 1920, 1080);
+        position_aero = (581.6f, 367.2f);
     else if (airport_name == "Toulouse")
-        position_aero = convertirCoordonneesRelatives(0.40f, 0.85f, 1920, 1080);
+        position_aero = (868.0f, 918.0f);
     else
-        position_aero = convertirCoordonneesRelatives(0.5f, 0.25f, 1920, 1080);
+        position_aero = (950.0f, 280.0f);
 
     auto app = std::make_unique<ThreadedAPP>(airport_name, position_aero, shared_data);
     apps.push_back(std::move(app));
