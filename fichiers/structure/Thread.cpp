@@ -693,19 +693,19 @@ void SimulationManager::addAvion(const std::string& code_init, int alt_init, int
     int parking_init, int carb_init) {
     Coord destination;
     if (dest_init == "Paris")
-        destination = (950.0f, 280.0f);
+        destination = Coord(950.0f, 280.0f);
     else if (dest_init == "Nice")
-        destination = (1370.6f, 896.4f);
+        destination = Coord(1370.6f, 896.4f);
     else if (dest_init == "Lille")
-        destination = (1000.8f, 54.0f);
+        destination = Coord(1000.8f, 54.0f);
     else if (dest_init == "Strasbourg")
-        destination = (1382.8f, 291.6f);
+        destination = Coord(1382.8f, 291.6f);
     else if (dest_init == "Rennes")
-        destination = (581.6f, 367.2f);
+        destination = Coord(581.6f, 367.2f);
     else if (dest_init == "Toulouse")
-        destination = (868.0f, 918.0f);
+        destination = Coord(868.0f, 918.0f);
     else
-        destination = (950.0f, 280.0f);
+        destination = Coord(950.0f, 280.0f);
 
     auto avion = std::make_unique<ThreadedAvion>(shared_data);
     avion->set_code(code_init);
@@ -727,19 +727,19 @@ void SimulationManager::addCCR() {
 void SimulationManager::addAPP(const std::string& airport_name) {
     Coord position_aero;
     if (airport_name == "Paris")
-        position_aero = (950.0f, 280.0f);
+        position_aero = Coord(950.0f, 280.0f);
     else if (airport_name == "Nice")
-        position_aero = (1370.6f, 896.4f);
+        position_aero = Coord(1370.6f, 896.4f);
     else if (airport_name == "Lille")
-        position_aero = (1000.8f, 54.0f);
+        position_aero = Coord(1000.8f, 54.0f);
     else if (airport_name == "Strasbourg")
-        position_aero = (1382.8f, 291.6f);
+        position_aero = Coord(1382.8f, 291.6f);
     else if (airport_name == "Rennes")
-        position_aero = (581.6f, 367.2f);
+        position_aero = Coord(581.6f, 367.2f);
     else if (airport_name == "Toulouse")
-        position_aero = (868.0f, 918.0f);
+        position_aero = Coord(868.0f, 918.0f);
     else
-        position_aero = (950.0f, 280.0f);
+        position_aero = Coord(950.0f, 280.0f);
 
     auto app = std::make_unique<ThreadedAPP>(airport_name, position_aero, shared_data);
     apps.push_back(std::move(app));
