@@ -79,6 +79,7 @@ public:
     void message_de_APP();
     void carburant_et_urgences();
     void avancer();
+    void decollage();
 };
 
 class ThreadedCCR : public CCR {

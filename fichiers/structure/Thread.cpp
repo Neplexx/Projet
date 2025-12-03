@@ -7,6 +7,8 @@
 #include <set>
 
 void ThreadedAvion::run() {
+    decollage();
+
     while (!stop_thread_) {
         if (stop_thread_) {
             break;
@@ -280,6 +282,23 @@ void ThreadedAvion::avancer() {
     }
 }
 
+void ThreadedAvion::decollage() {
+    int timing = 1000; //1s
+
+    std::cout << "Avion " << get_code() << " : Début de la séquence de décollage..." << std::endl;
+
+    for (int i = 0; i < 11; i += 1) {
+        set_vitesse(i * 100);
+        set_altitude(i * 600);
+
+        std::cout << "Avion " << get_code() << " - Étape de décollage " << i << "/10. Alt: " << get_altitude() << "ft, Vit: " << get_vitesse() << std::endl;
+        if (i < 10) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(timing));
+        }
+    }
+    std::cout << "Avion " << get_code() << " : Décollage terminé. Altitude de croisière atteinte." << std::endl;
+}
+
 ThreadedAvion::ThreadedAvion(std::shared_ptr<DataHub> hub) : data(hub) {}
 
 // CCR
@@ -550,9 +569,7 @@ void ThreadedAPP::collisions() {
             float distance = std::sqrt(dx * dx + dy * dy);
 
             if (distance < 15) {
-                std::cout << "\nAPP " << nom_aeroport_ << " : ALERTE COLLISION entre "
-                    << avions_en_vol[i].first << " et " << avions_en_vol[j].first
-                    << " (distance: " << distance << "px)" << std::endl;
+                std::cout << "\nAPP " << nom_aeroport_ << " : ALERTE COLLISION entre " << avions_en_vol[i].first << " et " << avions_en_vol[j].first << " (distance: " << distance << "px)" << std::endl;
             }
         }
     }
@@ -560,9 +577,7 @@ void ThreadedAPP::collisions() {
 
 // TWR
 
-ThreadedTWR::ThreadedTWR(int nb_places, const std::string& nom_a, std::shared_ptr<DataHub> sd)
-    : TWR(nb_places), shared_data_(sd), nom_aeroport_(nom_a) {
-}
+ThreadedTWR::ThreadedTWR(int nb_places, const std::string& nom_a, std::shared_ptr<DataHub> sd) : TWR(nb_places), shared_data_(sd), nom_aeroport_(nom_a) {}
 
 void ThreadedTWR::run() {
     std::cout << "TWR " << nom_aeroport_ << " démarrée avec "

@@ -81,8 +81,6 @@ public:
 
 	void journal();
 
-	void décollage();
-
 	TWR(int nb_places);
 };
 
