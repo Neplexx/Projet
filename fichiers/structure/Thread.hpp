@@ -169,3 +169,5 @@ public:
     void startSimulation();
     void stopSimulation();
 };
+
+Coord convertirCoordonneesRelatives(float relX, float relY);

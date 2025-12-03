@@ -99,12 +99,12 @@ void updateScaleAndPosition(RenderWindow& app, Sprite& backgroundSprite, Texture
 //Les villes
 vector<Ville> createVilles(Font& font) {
     return {
-        {"Lille", {1000.8f, 54.0f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
-        {"Paris", {950.0f, 280.0f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
-        {"Strasbourg", {1382.8f, 291.6f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
-        {"Rennes", {581.6f, 367.2f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
-        {"Nice", {1370.6f, 896.4f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
-        {"Toulouse", {868.0f, 918.0f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"}
+        {"Lille", {0.54f, 0.05f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Paris", {0.5f, 0.25f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Strasbourg", {0.84f, 0.27f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Rennes", {0.23f, 0.34f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Nice", {0.83f, 0.83f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"},
+        {"Toulouse", {0.40f, 0.85f}, CircleShape(8.f), Text(font), path_image + "aeroport.png"}
     };
 }
 
@@ -115,8 +115,8 @@ void initMarkersTexts(vector<Ville>& villes, Sprite& backgroundSprite, FloatRect
         ville.marqueur.setOutlineThickness(2.f);
         ville.marqueur.setOutlineColor(Color::Black);
 
-        float X = ville.positionRelative.x;
-        float Y = ville.positionRelative.y;
+        float X = backgroundSprite.getPosition().x + ville.positionRelative.x * bounds.size.x;
+        float Y = backgroundSprite.getPosition().y + ville.positionRelative.y * bounds.size.y;
 
         ville.marqueur.setOrigin(Vector2f(ville.marqueur.getRadius(), ville.marqueur.getRadius()));
         ville.marqueur.setPosition(Vector2f(X, Y));
@@ -125,7 +125,7 @@ void initMarkersTexts(vector<Ville>& villes, Sprite& backgroundSprite, FloatRect
         ville.texte.setCharacterSize(20);
         ville.texte.setFillColor(Color::Black);
         ville.texte.setOutlineThickness(1.f);
-        ville.texte.setOutlineColor(Color::White);
+        ville.texte.setOutlineColor(Color::Black);
         ville.texte.setPosition(Vector2f(X + 15.f, Y - 10.f));
     }
 }
