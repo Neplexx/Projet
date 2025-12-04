@@ -68,7 +68,7 @@ private:
 
 public:
     ThreadedAvion(std::shared_ptr<DataHub> hub);
-    
+
     void run();
     void start();
     void stop();
@@ -121,7 +121,7 @@ public:
     void message_de_Avion();
     void envoie_trajectoire_Avion(const std::string& code);
     void demande_piste_TWR(const std::string& code);
-	void message_de_TWR();
+    void message_de_TWR();
     void trafic_aerien();
     void collisions();
 };
@@ -148,12 +148,14 @@ public:
 };
 
 class SimulationManager {
-private:
+public:
     std::vector<std::unique_ptr<ThreadedAvion>> avions;
+    std::shared_ptr<DataHub> shared_data;
+
+private:
     std::vector<std::unique_ptr<ThreadedCCR>> ccrs;
     std::vector<std::unique_ptr<ThreadedAPP>> apps;
     std::vector<std::unique_ptr<ThreadedTWR>> twrs;
-    std::shared_ptr<DataHub> shared_data;
 
 public:
     SimulationManager() : shared_data(std::make_shared<DataHub>()) {}
@@ -170,4 +172,4 @@ public:
     void stopSimulation();
 };
 
-Coord convertirCoordonneesRelatives(float relX, float relY);
+Coord convertirCoordonneesRelatives(float relX, float relY, int largeurFenetre, int hauteurFenetre);

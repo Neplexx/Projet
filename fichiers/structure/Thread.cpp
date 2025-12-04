@@ -240,7 +240,7 @@ void ThreadedAvion::avancer() {
             vitesse_ajustee = vitesse * (distance / 100.0f);
         }
 
-        float ratio = (vitesse_ajustee * 0.1f) / distance;
+        float ratio = (vitesse_ajustee * 0.03f) / distance;
         int moveX = static_cast<int>(dx * ratio);
         int moveY = static_cast<int>(dy * ratio);
 
