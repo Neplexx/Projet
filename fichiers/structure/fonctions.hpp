@@ -51,7 +51,7 @@ public:
 	void set_carburant(int carb);
 	int get_carburant() const;
 
-	Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const Coord& dest_init, int parking_init, int carb_init);
+	Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const Coord& dest_init, int parking_init, int carb_init);
 };
 
 class CCR { //International
