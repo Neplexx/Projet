@@ -34,6 +34,8 @@ struct AvionVisuel {
     Color couleurBase;
 
     Coord position;
+    Coord positionPrecedente;  // AJOUTÉ
+    float tempsDepuisMaj;      // AJOUTÉ
     int altitude;
     int vitesse;
     int carburant;
@@ -46,7 +48,8 @@ struct AvionVisuel {
     bool enEvitement;
 
     AvionVisuel() : nom(""), id(0), selectionne(false), couleurBase(Color::White),
-        position(Coord(0, 0)), altitude(0), vitesse(0), carburant(0),
+        position(Coord(0, 0)), positionPrecedente(Coord(0, 0)), tempsDepuisMaj(0.f),  // MODIFIÉ
+        altitude(0), vitesse(0), carburant(0),
         villeDepart(""), villeDestination(""), distanceParcourue(0.f), tempsVol(0.f),
         enEvitement(false) {
     }
@@ -239,14 +242,13 @@ void calculerTrajectoireSimple(AvionVisuel& av, const Coord& destination, float 
     }
 }
 
-// Fonction helper pour trouver la position d'une ville par son nom
 Coord trouverPositionVille(const string& nomVille, const vector<Ville>& villes) {
     for (const auto& ville : villes) {
         if (ville.nom == nomVille) {
             return ville.position;
         }
     }
-    return Coord(0, 0); // Fallback
+    return Coord(0, 0);
 }
 
 int main() {
@@ -269,37 +271,41 @@ int main() {
     float scale = min(scaleX, scaleY);
     backgroundSprite.setScale(Vector2f(scale, scale));
 
-    // Centrer le sprite
     FloatRect spriteBounds = backgroundSprite.getGlobalBounds();
     backgroundSprite.setPosition(Vector2f(
         (static_cast<float>(windowSize.x) - spriteBounds.size.x) / 2.f,
         (static_cast<float>(windowSize.y) - spriteBounds.size.y) / 2.f
     ));
 
-    // IMPORTANT: Créer les villes et initialiser leurs positions AVANT de créer les avions
+    // Créer les villes
     vector<Ville> villes = createVilles(font);
     initMarkersTexts(villes, backgroundSprite);
 
-    // Afficher les positions des villes pour debug
     cout << "\n=== POSITIONS DES VILLES ===" << endl;
     for (const auto& ville : villes) {
         cout << ville.nom << ": (" << ville.position.get_x() << ", " << ville.position.get_y() << ")" << endl;
     }
     cout << "============================\n" << endl;
 
+    // AJOUT: Compteur FPS
+    Clock fpsClock;
+    int frameCount = 0;
+    Text fpsText(font);
+    fpsText.setCharacterSize(24);
+    fpsText.setFillColor(Color::Yellow);
+    fpsText.setOutlineThickness(2.f);
+    fpsText.setOutlineColor(Color::Black);
+    fpsText.setPosition(Vector2f(windowSize.x - 150.f, 20.f));
+
     // Initialisation système de threads
     SimulationManager simulation;
-
-    // Créer les entités de contrôle
     simulation.addCCR();
 
-    // Créer APP et TWR pour chaque ville
     for (const auto& ville : villes) {
         simulation.addAPP(ville.nom);
         simulation.addTWR(5, ville.nom);
     }
 
-    // Générateur aléatoire
     random_device rd;
     mt19937 rng(rd());
     uniform_int_distribution<int> distVille(0, villes.size() - 1);
@@ -320,17 +326,15 @@ int main() {
         compteurAvions++;
         string codeAvion = "AF" + to_string(1000 + compteurAvions);
 
-        // CORRECTION: Passer directement la position Coord de la ville de destination
         Coord posDepart = villes[villeDepart].position;
         Coord posDest = villes[villeDest].position;
 
-        // Créer l'avion dans le SimulationManager
         auto avion = make_unique<ThreadedAvion>(simulation.shared_data);
         avion->set_code(codeAvion);
         avion->set_altitude(0);
         avion->set_vitesse(0);
         avion->set_position(posDepart);
-        avion->set_destination(posDest); // CORRECTION: passer directement Coord, pas string
+        avion->set_destination(posDest);
         avion->set_place_parking(0);
         avion->set_carburant(1000);
 
@@ -341,10 +345,8 @@ int main() {
             << " vers " << villes[villeDest].nom << " " << posDest << endl;
     }
 
-    // Démarrer la simulation
     simulation.startSimulation();
 
-    // Map des avions visuels
     map<string, AvionVisuel> avionsVisuels;
     string avionSelectionneCode = "";
 
@@ -371,7 +373,6 @@ int main() {
             Coord posDepart = villes[villeDepart].position;
             Coord posDest = villes[villeDest].position;
 
-            // Créer l'avion directement
             auto avion = make_unique<ThreadedAvion>(simulation.shared_data);
             avion->set_code(codeAvion);
             avion->set_altitude(0);
@@ -381,7 +382,7 @@ int main() {
             avion->set_place_parking(0);
             avion->set_carburant(1000);
 
-            avion->start(); // Démarrer le thread immédiatement
+            avion->start();
             simulation.avions.push_back(move(avion));
 
             cout << "Nouvel avion créé: " << codeAvion
@@ -436,7 +437,6 @@ int main() {
         {
             lock_guard<mutex> lock(simulation.shared_data->avions_positionsMutex);
 
-            // Supprimer les avions qui n'existent plus
             vector<string> aSupprimer;
             for (auto& pair : avionsVisuels) {
                 if (simulation.shared_data->avions_positions.find(pair.first) ==
@@ -455,7 +455,6 @@ int main() {
                 const string& code = entry.first;
                 const Coord& pos = entry.second;
 
-                // Créer l'avion visuel s'il n'existe pas
                 if (avionsVisuels.find(code) == avionsVisuels.end()) {
                     AvionVisuel av;
                     av.nom = code;
@@ -474,14 +473,18 @@ int main() {
                     avionsVisuels[code] = av;
                 }
 
-                // Mettre à jour la position
+                // MODIFIÉ: Interpolation des positions
+                avionsVisuels[code].positionPrecedente = avionsVisuels[code].position;
                 avionsVisuels[code].position = pos;
-                if (avionsVisuels[code].sprite.has_value()) {
-                    avionsVisuels[code].sprite->setPosition(Vector2f(pos.get_x(), pos.get_y()));
-                }
+                avionsVisuels[code].tempsDepuisMaj = 0.f;
 
                 avionsVisuels[code].tempsVol += deltaTime;
             }
+        }
+
+        // Incrémenter le temps d'interpolation pour tous les avions
+        for (auto& pair : avionsVisuels) {
+            pair.second.tempsDepuisMaj += deltaTime;
         }
 
         // Récupérer infos détaillées
@@ -498,19 +501,20 @@ int main() {
             }
         }
 
-        // Détecter proximités
+        // Détecter proximités (optimisé)
         for (auto& pair1 : avionsVisuels) {
             pair1.second.enEvitement = false;
+            Vector2f pos1(pair1.second.position.get_x(), pair1.second.position.get_y());
+
             for (auto& pair2 : avionsVisuels) {
-                if (pair1.first != pair2.first) {
-                    float dist = distance(
-                        Vector2f(pair1.second.position.get_x(), pair1.second.position.get_y()),
-                        Vector2f(pair2.second.position.get_x(), pair2.second.position.get_y())
-                    );
-                    if (dist < 150.f) {
-                        pair1.second.enEvitement = true;
-                        break;
-                    }
+                if (pair1.first >= pair2.first) continue;
+
+                Vector2f pos2(pair2.second.position.get_x(), pair2.second.position.get_y());
+                float dist = distance(pos1, pos2);
+
+                if (dist < 150.f) {
+                    pair1.second.enEvitement = true;
+                    pair2.second.enEvitement = true;
                 }
             }
         }
@@ -560,9 +564,21 @@ int main() {
             app.draw(ville.texte);
         }
 
+        // MODIFIÉ: Dessin avec interpolation
         for (const auto& pair : avionsVisuels) {
             if (pair.second.sprite.has_value()) {
-                app.draw(*pair.second.sprite);
+                const auto& av = pair.second;
+
+                // Interpolation de position
+                float ratio = min(av.tempsDepuisMaj / 0.1f, 1.0f);
+                float x = av.positionPrecedente.get_x() * (1.0f - ratio) +
+                    av.position.get_x() * ratio;
+                float y = av.positionPrecedente.get_y() * (1.0f - ratio) +
+                    av.position.get_y() * ratio;
+
+                Sprite spriteTemp = *av.sprite;
+                spriteTemp.setPosition(Vector2f(x, y));
+                app.draw(spriteTemp);
             }
         }
 
