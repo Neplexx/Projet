@@ -18,12 +18,14 @@ using namespace sf;
 
 #ifdef _MSC_VER
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-#define PATH_IMG_ "assets/"
-#else
-#define PATH_IMG "assets/"
 #endif
 
-const std::string path_image(PATH_IMG);
+#ifndef PATH_IMG
+    #define PATH_IMG "assets/"
+#endif
+
+const std::string path_image = PATH_IMG;
+
 const float PX_TO_KMH = 3.0f;
 
 struct AvionVisuel {
@@ -87,7 +89,9 @@ Texture loadAvionTexture(const string& path) {
                 }
             }
         }
-        avionTexture.loadFromImage(img);
+        if (!avionTexture.loadFromImage(img)) {
+            cerr << "Erreur critique : Impossible de créer la texture par défaut." << endl;
+        }
     }
     return avionTexture;
 }
