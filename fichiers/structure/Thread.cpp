@@ -289,7 +289,7 @@ void ThreadedAvion::avancer() {
 }
 
 void ThreadedAvion::decollage() {
-    int timing = 1000; //1s
+    int timing = 100; //1s
 
     std::cout << "Avion " << get_code() << " : Début de la séquence de décollage..." << std::endl;
 

@@ -78,45 +78,51 @@ Avion::Avion(const std::string& code_init, int alt_init, int vit_init, const Coo
 void CCR::planning() {
 	using json = nlohmann::json;
 	json planning;
-	planning["Days"] = { "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche" };
-	planning["Arrival"] = { "Nice", "Rennes", "Paris", "Strasbourg", "Lille", "Toulouse" };
-	planning["Departure"] = planning["Arrival"];
-	planning["Lenght"] = { {"1h45", "1h45", "1h30", "1h30", "1h15","0h00"}, {"1h45","0h45","1h45","1h15","1h30"}, {"1h45","0h45","1h00","0h30","1h15","0h00"}, {"1h30","1h45","1h00","1h00","2h00","0h00"},{"1h30", "1h15", "0h30", "1h00", "1h30","0h00" },{"1h15", "1h30", "1h15", "2h00", "1h30","0h00"}, {"0h00","0h00","0h00","0h00","0h00","0h00"} };
-	planning["Time"] = { "0h00", "0h15", "0h30", "0h45", "1h00", "1h15", "1h30", "1h45", "2h00", "2h15", "2h30", "2h45", "3h00", "3h15", "3h30", "3h45", "4h00", "4h15", "4h30", "4h45", "5h00", "5h15", "5h30", "5h45", "6h00", "6h15", "6h30", "6h45", "7h00", "7h15", "7h30", "7h45", "8h00", "8h15", "8h30", "8h45", "9h00", "9h15", "9h30", "9h45", "10h00", "10h15", "10h30", "10h45", "11h00", "11h15", "11h30", "11h45", "12h00", "12h15", "12h30", "12h45", "13h00", "13h15", "13h30", "13h45", "14h00", "14h15", "14h30", "14h45", "15h00", "15h15", "15h30", "15h45", "16h00", "16h15", "16h30", "16h45", "17h00", "17h15", "17h30", "17h45", "18h00", "18h15", "18h30", "18h45", "19h00", "19h15", "19h30", "19h45", "20h00", "20h15", "20h30", "20h45", "21h00", "21h15", "21h30", "21h45", "22h00", "22h15", "22h30", "22h45", "23h00", "23h15", "23h30", "23h45" };
-	planning["Delay"] = { "0h30" };
-	planning["flights"] = {};
-	for (int i = 0; i < planning["Days"].size(); i += 1) {
-		for (int j = 0; j < planning["Departure"].size(); j += 1) {
+
+	srand(static_cast<unsigned int>(time(nullptr)));
+
+	std::vector<std::string> cities = { "Nice", "Rennes", "Paris", "Strasbourg", "Lille", "Toulouse" };
+	planning["flights"] = json::array();
+
+	int vol_number = 1000;
+
+	for (int heure = 0; heure < 24; heure++) {
+		for (int minute = 0; minute < 60; minute += 15) {
+			int dep_idx = rand() % cities.size();
+			int arr_idx;
+			do {
+				arr_idx = rand() % cities.size();
+			} while (arr_idx == dep_idx);
+
+			std::string departure = cities[dep_idx];
+			std::string arrival = cities[arr_idx];
+
+			int duree_minutes = 30 + (rand() % 90);
+			int h_dur = duree_minutes / 60;
+			int m_dur = duree_minutes % 60;
+			std::string length = std::to_string(h_dur) + "h" + (m_dur < 10 ? "0" : "") + std::to_string(m_dur);
+
+			// Formatage de l'heure pour correspondre à l'affichage (ex: 8h15)
+			std::string timeStr = std::to_string(heure) + "h" + (minute < 10 ? "0" : "") + std::to_string(minute);
+
 			planning["flights"].push_back({
-				{"day", planning["Days"][i]},
-				{"departure", planning["Departure"][j]},
-				{"arrival", planning["Arrival"][j]},
-				{"length", planning["Lenght"][i][j]},
-				{"time", planning["Time"][(i + j) % planning["Time"].size()]},
-				{"delay", planning["Delay"][0]}
+				{"day", "Lundi"},
+				{"departure", departure},
+				{"arrival", arrival},
+				{"length", length},
+				{"time", timeStr},
+				{"code", "AF" + std::to_string(vol_number)}
 				});
+
+			vol_number++;
 		}
 	}
-	std::string filepath = "planning.json";  // Dans le r�pertoire courant
 
-	std::ofstream file(filepath);
+	std::ofstream file("planning.json");
 	if (file.is_open()) {
 		file << planning.dump(4);
 		file.close();
-		std::cout << "Planning sauvegard� dans " << filepath << std::endl;
-	}
-	else {
-#ifdef _WIN32
-		system("mkdir . 2>nul");
-#else
-		system("mkdir -p .");
-#endif
-		// R�essayer
-		std::ofstream file2(filepath);
-		if (file2.is_open()) {
-			file2 << planning.dump(4);
-			file2.close();
-		}
+		std::cout << "Planning genere avec " << planning["flights"].size() << " vols" << std::endl;
 	}
 }
 
