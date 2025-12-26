@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -10,10 +10,10 @@ private:
 	int x;
 	int y;
 public:
-	void set_x(int X); // définit la coordonnée x
-	void set_y(int Y); // définit la coordonnée y
-	int get_x() const; // retourne la coordonnée x
-	int get_y() const; // retourne la coordonnée y
+	void set_x(int X); // dï¿½finit la coordonnï¿½e x
+	void set_y(int Y); // dï¿½finit la coordonnï¿½e y
+	int get_x() const; // retourne la coordonnï¿½e x
+	int get_y() const; // retourne la coordonnï¿½e y
 	Coord(int X = 0, int Y = 0);
 	bool operator==(const Coord& other) const;
 	friend std::ostream& operator<<(std::ostream& os, const Coord& c);
@@ -57,23 +57,23 @@ public:
 class CCR { //International
 public:
 	void calcul_trajectoire(Avion& avion); // calcul d'une trajectoire sans collision pour l'avion
-	void planning(); // gère le planning aérien dans un fichier .json
+	void planning(); // gï¿½re le planning aï¿½rien dans un fichier .json
 };
 
-class APP { //Arrivée aéroport
+class APP { //Arrivï¿½e aï¿½roport
 public:
-	void envoie_infos_avion(); // envoie la trajectoire et altitude à suivre à l'avion après réception du signal
-	void piste_libre(); // demande à twr si la piste d'atterrissage est libre
+	void envoie_infos_avion(); // envoie la trajectoire et altitude ï¿½ suivre ï¿½ l'avion aprï¿½s rï¿½ception du signal
+	void piste_libre(); // demande ï¿½ twr si la piste d'atterrissage est libre
 	void urgence();
 	void trajectoire_atterissage();
 
 };
 
-class TWR { //Dans aéroport
+class TWR { //Dans aï¿½roport
 private:
 	bool piste; // vrai si libre, false sinon
-	std::vector<bool> parking; // index = la place et l'élément indique si la place est libre ou non
-	void set_piste(bool facteur); // Protection de décollage pour que pas n'importe qui puisse libérer la piste
+	std::vector<bool> parking; // index = la place et l'ï¿½lï¿½ment indique si la place est libre ou non
+	void set_piste(bool facteur); // Protection de dï¿½collage pour que pas n'importe qui puisse libï¿½rer la piste
 public:
 	bool get_piste() const;
 
@@ -85,4 +85,3 @@ public:
 };
 
 //Ajouter class Thread
-
