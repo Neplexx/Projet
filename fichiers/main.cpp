@@ -16,16 +16,15 @@
 using namespace std;
 using namespace sf;
 
-#ifdef _MSC_VER
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-#endif
+//#ifdef _MSC_VER
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#endif
 
 #ifndef PATH_IMG
-    #define PATH_IMG "assets/"
+#define PATH_IMG "assets/"
 #endif
 
 const std::string path_image = PATH_IMG;
-
 const float PX_TO_KMH = 3.0f;
 
 struct AvionVisuel {
@@ -36,8 +35,8 @@ struct AvionVisuel {
     Color couleurBase;
 
     Coord position;
-    Coord positionPrecedente;  // AJOUTÉ
-    float tempsDepuisMaj;      // AJOUTÉ
+    Coord positionPrecedente;
+    float tempsDepuisMaj;
     int altitude;
     int vitesse;
     int carburant;
@@ -45,15 +44,16 @@ struct AvionVisuel {
     string villeDestination;
     float distanceParcourue;
     float tempsVol;
+    EtatAvion etat;
 
     vector<Vector2f> trajectoirePredite;
     bool enEvitement;
 
     AvionVisuel() : nom(""), id(0), selectionne(false), couleurBase(Color::White),
-        position(Coord(0, 0)), positionPrecedente(Coord(0, 0)), tempsDepuisMaj(0.f),  // MODIFIÉ
+        position(Coord(0, 0)), positionPrecedente(Coord(0, 0)), tempsDepuisMaj(0.f),
         altitude(0), vitesse(0), carburant(0),
         villeDepart(""), villeDestination(""), distanceParcourue(0.f), tempsVol(0.f),
-        enEvitement(false) {
+        etat(EN_VOL), enEvitement(false) {
     }
 };
 
@@ -63,6 +63,7 @@ struct Ville {
     Coord position;
     CircleShape marqueur;
     Text texte;
+    bool selectionne;
 };
 
 Texture loadBackgroundImage(const string& path) {
@@ -108,12 +109,12 @@ Font loadFont(const string& path) {
 vector<Ville> createVilles(const Font& font) {
     vector<Ville> villes;
 
-    villes.push_back({ "Lille", {0.54f, 0.05f}, Coord(0, 0), CircleShape(8.f), Text(font) });
-    villes.push_back({ "Paris", {0.5f, 0.25f}, Coord(0, 0), CircleShape(8.f), Text(font) });
-    villes.push_back({ "Strasbourg", {0.84f, 0.27f}, Coord(0, 0), CircleShape(8.f), Text(font) });
-    villes.push_back({ "Rennes", {0.23f, 0.34f}, Coord(0, 0), CircleShape(8.f), Text(font) });
-    villes.push_back({ "Nice", {0.83f, 0.83f}, Coord(0, 0), CircleShape(8.f), Text(font) });
-    villes.push_back({ "Toulouse", {0.40f, 0.85f}, Coord(0, 0), CircleShape(8.f), Text(font) });
+    villes.push_back({ "Lille", {0.54f, 0.05f}, Coord(0, 0), CircleShape(8.f), Text(font), false });
+    villes.push_back({ "Paris", {0.5f, 0.25f}, Coord(0, 0), CircleShape(8.f), Text(font), false });
+    villes.push_back({ "Strasbourg", {0.84f, 0.27f}, Coord(0, 0), CircleShape(8.f), Text(font), false });
+    villes.push_back({ "Rennes", {0.23f, 0.34f}, Coord(0, 0), CircleShape(8.f), Text(font), false });
+    villes.push_back({ "Nice", {0.83f, 0.83f}, Coord(0, 0), CircleShape(8.f), Text(font), false });
+    villes.push_back({ "Toulouse", {0.40f, 0.85f}, Coord(0, 0), CircleShape(8.f), Text(font), false });
 
     return villes;
 }
@@ -149,10 +150,6 @@ float distance(Vector2f a, Vector2f b) {
     return std::sqrt(dx * dx + dy * dy);
 }
 
-float magnitude(Vector2f v) {
-    return std::sqrt(v.x * v.x + v.y * v.y);
-}
-
 void dessinerTrajectoire(RenderWindow& app, const AvionVisuel& avion) {
     if (avion.trajectoirePredite.size() < 2) return;
 
@@ -186,10 +183,24 @@ void dessinerTrajectoire(RenderWindow& app, const AvionVisuel& avion) {
     }
 }
 
+string etatToString(EtatAvion etat) {
+    switch (etat) {
+    case EN_VOL: return "En vol";
+    case APPROCHE_FINALE: return "Approche finale";
+    case ATTERRISSAGE: return "Atterrissage";
+    case ROULAGE_ARRIVEE: return "Roulage arrivee";
+    case STATIONNE: return "Stationne";
+    case ROULAGE_DEPART: return "Roulage depart";
+    case DECOLLAGE: return "Decollage";
+    default: return "Inconnu";
+    }
+}
+
 void afficherInfosAvion(RenderWindow& app, const AvionVisuel& avion, const Font& font) {
     ostringstream oss;
     oss << fixed << setprecision(1);
     oss << "=== " << avion.nom << " ===\n";
+    oss << "Etat: " << etatToString(avion.etat) << "\n";
     oss << "Position: (" << avion.position.get_x() << ", " << avion.position.get_y() << ")\n";
     oss << "Depart: " << avion.villeDepart << "\n";
     oss << "Destination: " << avion.villeDestination << "\n";
@@ -212,6 +223,46 @@ void afficherInfosAvion(RenderWindow& app, const AvionVisuel& avion, const Font&
     fond.setOutlineColor(Color(0, 200, 0, 255));
 
     Vector2f posInfo(20.f, 20.f);
+    fond.setPosition(posInfo);
+    infoText.setPosition(Vector2f(posInfo.x + 15.f, posInfo.y + 15.f));
+
+    app.draw(fond);
+    app.draw(infoText);
+}
+
+void afficherInfosAeroport(RenderWindow& app, const string& nomAeroport,
+    const vector<AvionVisuel>& avions, const Font& font,
+    const Vector2u& windowSize) {
+    ostringstream oss;
+    oss << "=== AEROPORT " << nomAeroport << " ===\n\n";
+
+    vector<AvionVisuel> avionsAeroport;
+    for (const auto& av : avions) {
+        if (av.villeDestination == nomAeroport || av.villeDepart == nomAeroport) {
+            avionsAeroport.push_back(av);
+        }
+    }
+
+    oss << "Nombre d'avions: " << avionsAeroport.size() << "\n\n";
+
+    for (const auto& av : avionsAeroport) {
+        oss << av.nom << " - " << etatToString(av.etat) << "\n";
+    }
+
+    Text infoText(font);
+    infoText.setString(oss.str());
+    infoText.setCharacterSize(16);
+    infoText.setFillColor(Color::White);
+    infoText.setOutlineThickness(1.f);
+    infoText.setOutlineColor(Color::Black);
+
+    FloatRect textBounds = infoText.getLocalBounds();
+    RectangleShape fond(Vector2f(textBounds.size.x + 30.f, textBounds.size.y + 30.f));
+    fond.setFillColor(Color(0, 0, 0, 200));
+    fond.setOutlineThickness(3.f);
+    fond.setOutlineColor(Color(255, 100, 0, 255));
+
+    Vector2f posInfo(windowSize.x - textBounds.size.x - 50.f, 20.f);
     fond.setPosition(posInfo);
     infoText.setPosition(Vector2f(posInfo.x + 15.f, posInfo.y + 15.f));
 
@@ -256,17 +307,14 @@ Coord trouverPositionVille(const string& nomVille, const vector<Ville>& villes) 
 }
 
 int main() {
-    // Initialisation SFML
     VideoMode desktop = VideoMode::getDesktopMode();
     RenderWindow app(desktop, "Simulation ATC", State::Fullscreen);
     app.setFramerateLimit(60);
 
-    // Chargement ressources
     Texture backgroundImage = loadBackgroundImage(path_image + "France.jpg");
     Texture avionTexture = loadAvionTexture(path_image + "avion.png");
     Font font = loadFont(path_image + "arial.ttf");
 
-    // Sprite de fond centré
     Sprite backgroundSprite(backgroundImage);
     Vector2u windowSize = app.getSize();
     Vector2u textureSize = backgroundImage.getSize();
@@ -281,7 +329,6 @@ int main() {
         (static_cast<float>(windowSize.y) - spriteBounds.size.y) / 2.f
     ));
 
-    // Créer les villes
     vector<Ville> villes = createVilles(font);
     initMarkersTexts(villes, backgroundSprite);
 
@@ -291,17 +338,6 @@ int main() {
     }
     cout << "============================\n" << endl;
 
-    // AJOUT: Compteur FPS
-    Clock fpsClock;
-    int frameCount = 0;
-    Text fpsText(font);
-    fpsText.setCharacterSize(24);
-    fpsText.setFillColor(Color::Yellow);
-    fpsText.setOutlineThickness(2.f);
-    fpsText.setOutlineColor(Color::Black);
-    fpsText.setPosition(Vector2f(windowSize.x - 150.f, 20.f));
-
-    // Initialisation système de threads
     SimulationManager simulation;
     simulation.addCCR();
 
@@ -309,52 +345,22 @@ int main() {
         simulation.addAPP(ville.nom);
         simulation.addTWR(5, ville.nom);
     }
-
-    random_device rd;
-    mt19937 rng(rd());
-    uniform_int_distribution<int> distVille(0, villes.size() - 1);
-
-    Clock spawnClock;
-    const float tempsEntreAvions = 3.f;
-    int compteurAvions = 0;
-
-    // Créer quelques avions initiaux
-    for (int i = 0; i < 3; ++i) {
-        int villeDepart = distVille(rng);
-        int villeDest = distVille(rng);
-
-        while (villeDest == villeDepart) {
-            villeDest = distVille(rng);
-        }
-
-        compteurAvions++;
-        string codeAvion = "AF" + to_string(1000 + compteurAvions);
-
-        Coord posDepart = villes[villeDepart].position;
-        Coord posDest = villes[villeDest].position;
-
-        auto avion = make_unique<ThreadedAvion>(simulation.shared_data);
-        avion->set_code(codeAvion);
-        avion->set_altitude(0);
-        avion->set_vitesse(0);
-        avion->set_position(posDepart);
-        avion->set_destination(posDest);
-        avion->set_place_parking(0);
-        avion->set_carburant(1000);
-
-        simulation.avions.push_back(move(avion));
-
-        cout << "Avion initial créé: " << codeAvion
-            << " de " << villes[villeDepart].nom << " " << posDepart
-            << " vers " << villes[villeDest].nom << " " << posDest << endl;
-    }
-
+    simulation.creerPlanning();
+    simulation.creerVolsDepuisPlanning();
     simulation.startSimulation();
 
     map<string, AvionVisuel> avionsVisuels;
     string avionSelectionneCode = "";
+    string aeroportSelectionne = "";
 
     Clock clock;
+
+    Text timeText(font);
+    timeText.setCharacterSize(28);
+    timeText.setFillColor(Color::Yellow);
+    timeText.setOutlineThickness(2.f);
+    timeText.setOutlineColor(Color::Black);
+    timeText.setPosition(Vector2f(20.f, 20.f));
 
     while (app.isOpen()) {
         float deltaTime = clock.restart().asSeconds();
@@ -362,41 +368,6 @@ int main() {
         Vector2i mousePixelPos = Mouse::getPosition(app);
         Vector2f mousePos(static_cast<float>(mousePixelPos.x), static_cast<float>(mousePixelPos.y));
 
-        // Génération automatique d'avions
-        if (spawnClock.getElapsedTime().asSeconds() > tempsEntreAvions) {
-            int villeDepart = distVille(rng);
-            int villeDest = distVille(rng);
-
-            while (villeDest == villeDepart) {
-                villeDest = distVille(rng);
-            }
-
-            compteurAvions++;
-            string codeAvion = "AF" + to_string(1000 + compteurAvions);
-
-            Coord posDepart = villes[villeDepart].position;
-            Coord posDest = villes[villeDest].position;
-
-            auto avion = make_unique<ThreadedAvion>(simulation.shared_data);
-            avion->set_code(codeAvion);
-            avion->set_altitude(0);
-            avion->set_vitesse(0);
-            avion->set_position(posDepart);
-            avion->set_destination(posDest);
-            avion->set_place_parking(0);
-            avion->set_carburant(1000);
-
-            avion->start();
-            simulation.avions.push_back(move(avion));
-
-            cout << "Nouvel avion créé: " << codeAvion
-                << " de " << villes[villeDepart].nom
-                << " vers " << villes[villeDest].nom << endl;
-
-            spawnClock.restart();
-        }
-
-        // Gestion des événements
         while (const optional<Event> event = app.pollEvent()) {
             if (event->is<Event::Closed>())
                 app.close();
@@ -404,6 +375,7 @@ int main() {
             if (event->is<Event::KeyPressed>()) {
                 const auto& keyEvent = event->getIf<Event::KeyPressed>();
                 if (keyEvent->code == Keyboard::Key::Escape) {
+                    simulation.sauvegarderJournal();
                     simulation.stopSimulation();
                     app.close();
                 }
@@ -415,29 +387,44 @@ int main() {
                     Vector2f clickPos(static_cast<float>(mouseEvent->position.x),
                         static_cast<float>(mouseEvent->position.y));
 
-                    bool avionClique = false;
-                    for (auto& pair : avionsVisuels) {
-                        if (pair.second.sprite.has_value() &&
-                            pair.second.sprite->getGlobalBounds().contains(clickPos)) {
-                            if (!avionSelectionneCode.empty()) {
-                                avionsVisuels[avionSelectionneCode].selectionne = false;
-                            }
-                            pair.second.selectionne = true;
-                            avionSelectionneCode = pair.first;
-                            avionClique = true;
+                    bool aeroportClique = false;
+                    for (auto& ville : villes) {
+                        if (ville.marqueur.getGlobalBounds().contains(clickPos)) {
+                            for (auto& v : villes) v.selectionne = false;
+                            ville.selectionne = true;
+                            aeroportSelectionne = ville.nom;
+                            aeroportClique = true;
+                            avionSelectionneCode = "";
                             break;
                         }
                     }
 
-                    if (!avionClique && !avionSelectionneCode.empty()) {
-                        avionsVisuels[avionSelectionneCode].selectionne = false;
-                        avionSelectionneCode = "";
+                    if (!aeroportClique) {
+                        bool avionClique = false;
+                        for (auto& pair : avionsVisuels) {
+                            if (pair.second.sprite.has_value() &&
+                                pair.second.sprite->getGlobalBounds().contains(clickPos)) {
+                                if (!avionSelectionneCode.empty()) {
+                                    avionsVisuels[avionSelectionneCode].selectionne = false;
+                                }
+                                pair.second.selectionne = true;
+                                avionSelectionneCode = pair.first;
+                                avionClique = true;
+                                aeroportSelectionne = "";
+                                for (auto& v : villes) v.selectionne = false;
+                                break;
+                            }
+                        }
+
+                        if (!avionClique && !avionSelectionneCode.empty()) {
+                            avionsVisuels[avionSelectionneCode].selectionne = false;
+                            avionSelectionneCode = "";
+                        }
                     }
                 }
             }
         }
 
-        // Récupérer les positions des avions depuis les threads
         {
             lock_guard<mutex> lock(simulation.shared_data->avions_positionsMutex);
 
@@ -477,21 +464,22 @@ int main() {
                     avionsVisuels[code] = av;
                 }
 
-                // MODIFIÉ: Interpolation des positions
                 avionsVisuels[code].positionPrecedente = avionsVisuels[code].position;
                 avionsVisuels[code].position = pos;
                 avionsVisuels[code].tempsDepuisMaj = 0.f;
-
                 avionsVisuels[code].tempsVol += deltaTime;
+
+                if (simulation.shared_data->avions_etats.find(code) !=
+                    simulation.shared_data->avions_etats.end()) {
+                    avionsVisuels[code].etat = simulation.shared_data->avions_etats[code];
+                }
             }
         }
 
-        // Incrémenter le temps d'interpolation pour tous les avions
         for (auto& pair : avionsVisuels) {
             pair.second.tempsDepuisMaj += deltaTime;
         }
 
-        // Récupérer infos détaillées
         for (auto& avion_ptr : simulation.avions) {
             string code = avion_ptr->get_code();
             if (avionsVisuels.find(code) != avionsVisuels.end()) {
@@ -505,7 +493,6 @@ int main() {
             }
         }
 
-        // Détecter proximités (optimisé)
         for (auto& pair1 : avionsVisuels) {
             pair1.second.enEvitement = false;
             Vector2f pos1(pair1.second.position.get_x(), pair1.second.position.get_y());
@@ -523,7 +510,6 @@ int main() {
             }
         }
 
-        // Rotation et couleurs
         for (auto& pair : avionsVisuels) {
             auto& av = pair.second;
             if (!av.sprite.has_value()) continue;
@@ -553,7 +539,6 @@ int main() {
             }
         }
 
-        // Dessin
         app.clear();
         app.draw(backgroundSprite);
 
@@ -564,16 +549,21 @@ int main() {
         }
 
         for (const auto& ville : villes) {
+            if (ville.selectionne) {
+                CircleShape highlight(15.f);
+                highlight.setFillColor(Color(255, 255, 0, 100));
+                highlight.setOrigin(Vector2f(15.f, 15.f));
+                highlight.setPosition(ville.marqueur.getPosition());
+                app.draw(highlight);
+            }
             app.draw(ville.marqueur);
             app.draw(ville.texte);
         }
 
-        // MODIFIÉ: Dessin avec interpolation
         for (const auto& pair : avionsVisuels) {
             if (pair.second.sprite.has_value()) {
                 const auto& av = pair.second;
 
-                // Interpolation de position
                 float ratio = min(av.tempsDepuisMaj / 0.1f, 1.0f);
                 float x = av.positionPrecedente.get_x() * (1.0f - ratio) +
                     av.position.get_x() * ratio;
@@ -591,9 +581,25 @@ int main() {
             afficherInfosAvion(app, avionsVisuels[avionSelectionneCode], font);
         }
 
+        if (!aeroportSelectionne.empty()) {
+            vector<AvionVisuel> avionsVec;
+            for (const auto& pair : avionsVisuels) {
+                avionsVec.push_back(pair.second);
+            }
+            afficherInfosAeroport(app, aeroportSelectionne, avionsVec, font, windowSize);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(simulation.shared_data->temps_simulation_mutex);
+            std::string heureActuelle = formatTime(simulation.shared_data->temps_simulation);
+            timeText.setString("Heure: " + heureActuelle);
+        }
+        app.draw(timeText);
+
         app.display();
     }
 
+    simulation.sauvegarderJournal();
     simulation.stopSimulation();
     return 0;
 }
