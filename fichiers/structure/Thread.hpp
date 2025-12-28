@@ -1,3 +1,6 @@
+#ifndef THREAD_HPP
+#define THREAD_HPP
+
 #include "fonctions.hpp"
 
 #include <thread>
@@ -31,40 +34,67 @@ struct TWRToAPP_ReponsePiste {
     bool pisteLibre;
 };
 
+struct AvionToDelete {
+    std::string avionCode;
+};
+
+struct AvionAuParking {
+    std::string code;
+    std::string aeroport;
+    int numeroPlace;
+    std::chrono::steady_clock::time_point heureArrivee;
+    int tempsParkingSecondes;
+};
+
 class DataHub {
 public:
     std::queue<AvionToAPP> avion_appQueue;
     std::mutex avion_appMutex;
     std::condition_variable avion_appCondition;
 
-    // APP -> Avion
     std::map<std::string, std::queue<APPToAvion>> app_avionQueue;
     std::mutex app_avionMutex;
     std::condition_variable app_avionCondition;
 
-    // APP -> TWR
     std::queue<APPToTWR_DemandePiste> app_twrQueue;
     std::mutex app_twrMutex;
     std::condition_variable app_twrCondition;
 
-    // TWR -> APP
     std::queue<TWRToAPP_ReponsePiste> twr_appQueue;
     std::mutex twr_appMutex;
     std::condition_variable twr_appCondition;
 
-    std::map<std::string, Coord> avions_positions; // Code avion -> Position
+    std::queue<AvionToDelete> avionsADeleteQueue;
+    std::mutex avionsADeleteMutex;
+    std::condition_variable avionsADeleteCondition;
+
+    std::map<std::string, Coord> avions_positions;
     std::mutex avions_positionsMutex;
 
     bool global_pisteLibre = true;
     std::mutex global_pisteLibre_mutex;
     std::condition_variable global_pisteLibreCondition;
+
+    std::map<std::string, std::vector<bool>> parkingsLibres;
+    std::map<std::string, std::vector<AvionAuParking>> avionsAuParking;
+    std::mutex parkingsMutex;
+
+    std::set<std::string> avionsAtterris;
+    std::mutex avionsAtterrisMutex;
+
+    std::map<std::string, Coord> coordonneesAeroports;
+    std::mutex coordonneesAeroportsMutex;
+
+    std::queue<std::pair<std::string, std::string>> decollageProgrammes;
+    std::mutex decollageProgrammesMutex;
 };
 
 class ThreadedAvion : public Avion {
 private:
     std::thread thread_;
     std::atomic<bool> stop_thread_;
-    std::shared_ptr<DataHub> data; //protection au lieu de &
+    std::shared_ptr<DataHub> data;
+    std::atomic<bool> a_atterri_;
 
 public:
     ThreadedAvion(std::shared_ptr<DataHub> hub);
@@ -80,6 +110,9 @@ public:
     void carburant_et_urgences();
     void avancer();
     void decollage();
+    void supprimerDuSysteme();
+
+    bool aAtterri() const { return a_atterri_; }
 };
 
 class ThreadedCCR : public CCR {
@@ -132,6 +165,7 @@ private:
     std::atomic<bool> stop_thread_;
     std::shared_ptr<DataHub> shared_data_;
     std::string nom_aeroport_;
+    static const int NB_PARKINGS = 5;
 
 public:
     ThreadedTWR(int nb_places, const std::string& nom_a, std::shared_ptr<DataHub> sd);
@@ -145,6 +179,8 @@ public:
     void message_de_APP();
     void gerer_parking();
     void gerer_decollages();
+
+    void initialiser_parkings();
 };
 
 class SimulationManager {
@@ -161,11 +197,11 @@ public:
     SimulationManager() : shared_data(std::make_shared<DataHub>()) {}
 
     void addAvion(const std::string& code_init, int alt_init, int vit_init,
-        const Coord& pos_init, const std::string& dest_init,
+        const Coord& pos_init, const Coord& dest_coord,
         int parking_init, int carb_init);
 
     void addCCR();
-    void addAPP(const std::string& airport_name);
+    void addAPP(const std::string& airport_name, const Coord& position);
     void addTWR(int nb_places, const std::string& airport_name);
 
     void startSimulation();
@@ -173,3 +209,5 @@ public:
 };
 
 Coord convertirCoordonneesRelatives(float relX, float relY, int largeurFenetre, int hauteurFenetre);
+
+#endif

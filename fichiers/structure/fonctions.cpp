@@ -87,7 +87,7 @@ void CCR::planning() {
 	int vol_number = 1000;
 
 	for (int heure = 0; heure < 24; heure++) {
-		for (int minute = 0; minute < 60; minute += 15) {
+		for (int minute = 0; minute < 60; minute += 30) {
 			int dep_idx = rand() % cities.size();
 			int arr_idx;
 			do {
@@ -101,8 +101,6 @@ void CCR::planning() {
 			int h_dur = duree_minutes / 60;
 			int m_dur = duree_minutes % 60;
 			std::string length = std::to_string(h_dur) + "h" + (m_dur < 10 ? "0" : "") + std::to_string(m_dur);
-
-			// Formatage de l'heure pour correspondre à l'affichage (ex: 8h15)
 			std::string timeStr = std::to_string(heure) + "h" + (minute < 10 ? "0" : "") + std::to_string(minute);
 
 			planning["flights"].push_back({
@@ -146,23 +144,12 @@ void journal(const std::string& type, const std::string& id, const std::string& 
 }
 
 void CCR::calcul_trajectoire(Avion& avion) {
-	// Utiliser A* pour trouver le chemin optimal
-	// 1. Cr�er une grille de l'espace a�rien
-	// 2. Marquer les zones interdites (m�t�o, autres avions)
-	// 3. Calculer le co�t f(n) = g(n) + h(n)
-	//    - g(n) = distance parcourue
-	//    - h(n) = estimation distance restante
-	// 4. Suivre le chemin optimal trouv�
-	// Parcoure toutes les cases
-	int nb_lignes = 300;    // nombre de lignes (hauteur)
-	int nb_colonnes = 500; // nombre de colonnes (largeur)
+	int nb_lignes = 300;
+	int nb_colonnes = 500;
 
-	//Grille initialis�e � z�ro (0 = libre, 1 = obstacle, 2 = avion, 3 = arriv�e)
 	std::vector<std::vector<int>> grille(nb_lignes, std::vector<int>(nb_colonnes, 0));
-	//grille[100][150] = 1; // Exemple d'obstacle
-	//d�finir chaque a�roport � une case
-	grille[avion.get_position().get_y()][avion.get_position().get_x()] = 2; // position actuelle
-	grille[avion.get_destination().get_y()][avion.get_destination().get_x()] = 3; // destination
+	grille[avion.get_position().get_y()][avion.get_position().get_x()] = 2;
+	grille[avion.get_destination().get_y()][avion.get_destination().get_x()] = 3;
 
 	int x1 = avion.get_position().get_x();
 	int y1 = avion.get_position().get_y();

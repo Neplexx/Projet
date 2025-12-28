@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <random>
 #include <fstream>
+#include <chrono>
 
 using namespace std;
 using namespace sf;
@@ -27,7 +28,6 @@ using namespace sf;
 
 const std::string path_image = PATH_IMG;
 
-// --- STRUCTURE POUR L'HORLOGE DE SIMULATION ---
 struct SimClock {
     int hours = 0;
     int minutes = 0;
@@ -82,6 +82,8 @@ struct AvionVisuel {
     }
 };
 
+#include "structure/AeroportWindow.hpp"
+
 struct Ville {
     string nom;
     Vector2f positionRelative;
@@ -90,7 +92,6 @@ struct Ville {
     Text texte;
 };
 
-// --- FONCTIONS UTILITAIRES ---
 
 Texture loadBackgroundImage(const string& path) {
     Texture backgroundImage;
@@ -222,7 +223,6 @@ void calculerTrajectoireSimple(AvionVisuel& av, const Coord& destination) {
     }
 }
 
-// --- MAIN ---
 
 int main() {
     VideoMode desktop = VideoMode::getDesktopMode();
@@ -247,6 +247,19 @@ int main() {
     vector<Ville> villes = createVilles(font);
     initMarkersTexts(villes, backgroundSprite);
 
+    SimulationManager simulation;
+    simulation.addCCR();
+    for (const auto& ville : villes) {
+        simulation.addAPP(ville.nom, ville.position);
+        simulation.addTWR(5, ville.nom);
+    }
+    AeroportWindowManager aeroportWindows(font, path_image + "aeroport.png", simulation.shared_data);
+    for (const auto& ville : villes) {
+        aeroportWindows.addAeroport(ville.nom,
+            ville.position.get_x(),
+            ville.position.get_y());
+    }
+
     CCR ccr_logic;
     ccr_logic.planning();
 
@@ -267,13 +280,6 @@ int main() {
     clockText.setOutlineThickness(2.f);
     clockText.setPosition(Vector2f(20.f, 20.f));
 
-    SimulationManager simulation;
-    simulation.addCCR();
-    for (const auto& ville : villes) {
-        simulation.addAPP(ville.nom);
-        simulation.addTWR(5, ville.nom);
-    }
-
     simulation.startSimulation();
 
     map<string, AvionVisuel> avionsVisuels;
@@ -292,17 +298,84 @@ int main() {
             for (const auto& flight : planningData["flights"]) {
                 if (flight["time"] == currentKey) {
                     string code = flight["code"];
-                    Coord posDep = trouverPositionVille(flight["departure"], villes);
-                    Coord posArr = trouverPositionVille(flight["arrival"], villes);
+                    string departure = flight["departure"];
+                    string arrival = flight["arrival"];
+                    if (departure == arrival) {
+                        cout << "[PLANNING] Vol " << code << " ignoré : "
+                            << departure << " → " << arrival << " (même ville)" << endl;
+                        continue;
+                    }
 
+                    Coord posDep = trouverPositionVille(departure, villes);
+                    Coord posArr = trouverPositionVille(arrival, villes);
+
+                    string codeDisponible = "";
+                    string aeroportSource = "";
+                    Coord positionReelle;
+                    {
+                        lock_guard<mutex> lock(simulation.shared_data->parkingsMutex);
+                        auto now = chrono::steady_clock::now();
+
+                        for (auto& aeroportPair : simulation.shared_data->avionsAuParking) {
+                            auto& avionsAuParking = aeroportPair.second;
+
+                            for (auto it = avionsAuParking.begin(); it != avionsAuParking.end(); ++it) {
+                                auto tempsParking = chrono::duration_cast<chrono::seconds>(
+                                    now - it->heureArrivee).count();
+
+                                if (tempsParking >= it->tempsParkingSecondes) {
+                                    codeDisponible = it->code;
+                                    aeroportSource = it->aeroport;
+                                    int placeLibre = it->numeroPlace;
+                                    positionReelle = trouverPositionVille(aeroportSource, villes);
+
+                                    cout << "\n[RÉUTILISATION] Code avion " << codeDisponible << " libéré du parking P" << (placeLibre + 1) << " de " << aeroportSource << endl;
+
+                                    simulation.shared_data->parkingsLibres[aeroportSource][placeLibre] = true;
+
+                                    avionsAuParking.erase(it);
+                                    goto code_trouve;
+                                }
+                            }
+                        }
+                    code_trouve:;
+                    }
+                    string codeAvion = codeDisponible.empty() ? code : codeDisponible;
+                    Coord positionDepart = codeDisponible.empty() ? posDep : positionReelle;
+
+                    if (!codeDisponible.empty() && aeroportSource == arrival) {
+                        cout << "[PLANNING] Vol " << code << " ignoré : avion " << codeDisponible
+                            << " déjà à destination (" << arrival << ")" << endl;
+                        continue;
+                    }
+
+                    if (!codeDisponible.empty()) {
+                        cout << "[PLANNING] Vol " << code << " : Réutilisation du code " << codeDisponible << " (" << aeroportSource << " → " << arrival << ")" << endl;
+
+                        for (auto it = simulation.avions.begin(); it != simulation.avions.end(); ++it) {
+                            if ((*it)->get_code() == codeDisponible) {
+                                (*it)->stop();
+                                (*it)->join();
+                                simulation.avions.erase(it);
+                                break;
+                            }
+                        }
+                        {
+                            lock_guard<mutex> lock(simulation.shared_data->avionsAtterrisMutex);
+                            simulation.shared_data->avionsAtterris.erase(codeDisponible);
+                        }
+                    }
+                    else {
+                        cout << "[PLANNING] Vol " << code << " : Création d'un nouvel avion ("
+                            << departure << " → " << arrival << ")" << endl;
+                    }
                     auto avion = make_unique<ThreadedAvion>(simulation.shared_data);
-                    avion->set_code(code);
+                    avion->set_code(codeAvion);
                     avion->set_altitude(0);
                     avion->set_vitesse(0);
-                    avion->set_position(posDep);
+                    avion->set_position(positionDepart);
                     avion->set_destination(posArr);
                     avion->set_carburant(1000);
-
                     avion->start();
                     simulation.avions.push_back(move(avion));
                 }
@@ -327,12 +400,22 @@ int main() {
                     }
                 }
                 if (!avionClique) {
-                    if (!avionSelectionneCode.empty()) avionsVisuels[avionSelectionneCode].selectionne = false;
+                    for (const auto& ville : villes) {
+                        if (ville.marqueur.getGlobalBounds().contains(clickPos)) {
+                            cout << "Ouverture fenetre TWR pour " << ville.nom << endl;
+                            aeroportWindows.toggleWindow(ville.nom);
+                            avionClique = true;
+                            break;
+                        }
+                    }
+                }
+                if (!avionClique) {
+                    if (!avionSelectionneCode.empty())
+                        avionsVisuels[avionSelectionneCode].selectionne = false;
                     avionSelectionneCode = "";
                 }
             }
         }
-
         {
             lock_guard<mutex> lock(simulation.shared_data->avions_positionsMutex);
 
@@ -361,7 +444,6 @@ int main() {
                 avionsVisuels[code].tempsDepuisMaj = 0.f;
             }
         }
-
         for (auto& avion_ptr : simulation.avions) {
             string code = avion_ptr->get_code();
             if (avionsVisuels.count(code)) {
@@ -378,6 +460,7 @@ int main() {
                 if (dx != 0 || dy != 0) av.sprite->setRotation(degrees(atan2(static_cast<float>(dy), static_cast<float>(dx)) * 180.f / 3.14159f + 90.f));
             }
         }
+        aeroportWindows.updateAll(avionsVisuels);
 
         app.clear();
         app.draw(backgroundSprite);
@@ -408,7 +491,7 @@ int main() {
 
         app.display();
     }
-
+    aeroportWindows.closeAll();
     simulation.stopSimulation();
     return 0;
 }

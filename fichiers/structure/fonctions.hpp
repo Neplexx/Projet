@@ -1,4 +1,7 @@
-﻿#include <iostream>
+﻿#ifndef FONCTIONS_HPP
+#define FONCTIONS_HPP
+
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -54,13 +57,13 @@ public:
 	Avion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const Coord& dest_init, int parking_init, int carb_init);
 };
 
-class CCR { //International
+class CCR {
 public:
 	void calcul_trajectoire(Avion& avion); // calcul d'une trajectoire sans collision pour l'avion
-	void planning(); // g�re le planning a�rien dans un fichier .json
+	void planning();
 };
 
-class APP { //Arriv�e a�roport
+class APP {
 public:
 	void envoie_infos_avion(); // envoie la trajectoire et altitude � suivre � l'avion apr�s r�ception du signal
 	void piste_libre(); // demande � twr si la piste d'atterrissage est libre
@@ -69,11 +72,11 @@ public:
 
 };
 
-class TWR { //Dans a�roport
+class TWR {
 private:
 	bool piste; // vrai si libre, false sinon
-	std::vector<bool> parking; // index = la place et l'�l�ment indique si la place est libre ou non
-	void set_piste(bool facteur); // Protection de d�collage pour que pas n'importe qui puisse lib�rer la piste
+	std::vector<bool> parking;
+	void set_piste(bool facteur);
 public:
 	bool get_piste() const;
 
@@ -83,5 +86,4 @@ public:
 
 	TWR(int nb_places);
 };
-
-//Ajouter class Thread
+#endif
