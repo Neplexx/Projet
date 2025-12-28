@@ -50,19 +50,19 @@ public:
     void open() {
         if (!isOpen) {
             window = std::make_unique<RenderWindow>(
-                VideoMode({ 1000, 700 }),
+                VideoMode({ 1200, 800 }),
                 "TWR - " + airportName
             );
             window->setFramerateLimit(60);
 
             if (backgroundLoaded && backgroundSprite) {
-                float scaleX = 1000.f / backgroundTexture.getSize().x;
-                float scaleY = 700.f / backgroundTexture.getSize().y;
+                float scaleX = 1200.f / backgroundTexture.getSize().x;
+                float scaleY = 800.f / backgroundTexture.getSize().y;
                 float scale = std::min(scaleX, scaleY);
                 backgroundSprite->setScale(Vector2f(scale, scale));
 
-                float posX = (1000.f - backgroundSprite->getGlobalBounds().size.x) / 2.f;
-                float posY = (700.f - backgroundSprite->getGlobalBounds().size.y) / 2.f;
+                float posX = (1200.f - backgroundSprite->getGlobalBounds().size.x) / 2.f;
+                float posY = (800.f - backgroundSprite->getGlobalBounds().size.y) / 2.f;
                 backgroundSprite->setPosition(Vector2f(posX, posY));
             }
 
@@ -100,13 +100,154 @@ public:
     bool getIsOpen() const { return isOpen && window && window->isOpen(); }
 
 private:
-    void drawNearbyAircraft(const std::map<std::string, AvionVisuel>& avions);
+    void drawHeader() {
+        RectangleShape headerBg(Vector2f(1200.f, 100.f));
+        headerBg.setPosition(Vector2f(0.f, 0.f));
+        headerBg.setFillColor(Color(25, 30, 45, 240));
+        window->draw(headerBg);
 
-    void drawAirportInfo() {
-        RectangleShape infoPanel(Vector2f(1000.f, 80.f));
-        infoPanel.setPosition(Vector2f(0.f, 620.f));
-        infoPanel.setFillColor(Color(0, 0, 0, 200));
-        window->draw(infoPanel);
+        RectangleShape separatorLine(Vector2f(1200.f, 3.f));
+        separatorLine.setPosition(Vector2f(0.f, 100.f));
+        separatorLine.setFillColor(Color(0, 180, 240));
+        window->draw(separatorLine);
+
+        Text title(font);
+        title.setString("TOUR DE CONTROLE - " + airportName);
+        title.setCharacterSize(32);
+        title.setFillColor(Color(0, 200, 255));
+        title.setStyle(Text::Bold);
+        title.setPosition(Vector2f(40.f, 25.f));
+        window->draw(title);
+
+        Text status(font);
+        status.setString("OPERATIONAL");
+        status.setCharacterSize(18);
+        status.setFillColor(Color(0, 255, 100));
+        status.setPosition(Vector2f(40.f, 65.f));
+        window->draw(status);
+    }
+
+    void drawNearbyAircraft(const std::map<std::string, AvionVisuel>& avions) {
+        RectangleShape approachPanel(Vector2f(560.f, 280.f));
+        approachPanel.setPosition(Vector2f(20.f, 120.f));
+        approachPanel.setFillColor(Color(20, 25, 35, 220));
+        approachPanel.setOutlineThickness(2.f);
+        approachPanel.setOutlineColor(Color(0, 180, 240));
+        window->draw(approachPanel);
+
+        Text panelTitle(font);
+        panelTitle.setString("AVIONS EN APPROCHE");
+        panelTitle.setCharacterSize(22);
+        panelTitle.setFillColor(Color(0, 200, 255));
+        panelTitle.setStyle(Text::Bold);
+        panelTitle.setPosition(Vector2f(40.f, 135.f));
+        window->draw(panelTitle);
+
+        RectangleShape tableHeader(Vector2f(520.f, 35.f));
+        tableHeader.setPosition(Vector2f(40.f, 170.f));
+        tableHeader.setFillColor(Color(30, 40, 60, 200));
+        window->draw(tableHeader);
+
+        std::vector<std::string> headers = { "CODE", "DISTANCE", "ALTITUDE", "VITESSE" };
+        std::vector<float> headerPositions = { 50.f, 180.f, 310.f, 440.f };
+
+        for (size_t i = 0; i < headers.size(); ++i) {
+            Text headerText(font);
+            headerText.setString(headers[i]);
+            headerText.setCharacterSize(16);
+            headerText.setFillColor(Color(150, 160, 180));
+            headerText.setStyle(Text::Bold);
+            headerText.setPosition(Vector2f(headerPositions[i], 178.f));
+            window->draw(headerText);
+        }
+
+        // Liste des avions
+        int yOffset = 215;
+        int count = 0;
+        const int MAX_DISPLAY = 6;
+
+        for (const auto& pair : avions) {
+            if (count >= MAX_DISPLAY) break;
+
+            const auto& av = pair.second;
+            int dx = av.position.get_x() - airportX;
+            int dy = av.position.get_y() - airportY;
+            float distance = std::sqrt(static_cast<float>(dx * dx + dy * dy));
+
+            if (distance < 400.f) {
+                if (count % 2 == 0) {
+                    RectangleShape rowBg(Vector2f(520.f, 30.f));
+                    rowBg.setPosition(Vector2f(40.f, yOffset - 5.f));
+                    rowBg.setFillColor(Color(15, 20, 30, 150));
+                    window->draw(rowBg);
+                }
+
+                Color textColor = Color::White;
+                if (distance < 50 && av.altitude < 2000) {
+                    textColor = Color(255, 50, 50);
+                }
+                else if (distance < 150) {
+                    textColor = Color(255, 200, 0);
+                }
+
+                Text codeText(font);
+                codeText.setString(av.nom);
+                codeText.setCharacterSize(16);
+                codeText.setFillColor(textColor);
+                codeText.setPosition(Vector2f(50.f, yOffset));
+                window->draw(codeText);
+
+                Text distText(font);
+                distText.setString(std::to_string(static_cast<int>(distance)) + " px");
+                distText.setCharacterSize(16);
+                distText.setFillColor(textColor);
+                distText.setPosition(Vector2f(180.f, yOffset));
+                window->draw(distText);
+
+                Text altText(font);
+                altText.setString(std::to_string(av.altitude) + " ft");
+                altText.setCharacterSize(16);
+                altText.setFillColor(textColor);
+                altText.setPosition(Vector2f(310.f, yOffset));
+                window->draw(altText);
+
+                Text speedText(font);
+                speedText.setString(std::to_string(av.vitesse) + " km/h");
+                speedText.setCharacterSize(16);
+                speedText.setFillColor(textColor);
+                speedText.setPosition(Vector2f(440.f, yOffset));
+                window->draw(speedText);
+
+                yOffset += 30;
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            Text noAircraft(font);
+            noAircraft.setString("Aucun avion en approche");
+            noAircraft.setCharacterSize(18);
+            noAircraft.setFillColor(Color(120, 130, 150));
+            noAircraft.setPosition(Vector2f(220.f, 260.f));
+            window->draw(noAircraft);
+        }
+    }
+
+    void drawParkings() {
+        RectangleShape parkingPanel(Vector2f(560.f, 380.f));
+        parkingPanel.setPosition(Vector2f(620.f, 120.f));
+        parkingPanel.setFillColor(Color(20, 25, 35, 220));
+        parkingPanel.setOutlineThickness(2.f);
+        parkingPanel.setOutlineColor(Color(0, 180, 240));
+        window->draw(parkingPanel);
+
+        Text panelTitle(font);
+        panelTitle.setString("POSITIONS DE PARKING");
+        panelTitle.setCharacterSize(22);
+        panelTitle.setFillColor(Color(0, 200, 255));
+        panelTitle.setStyle(Text::Bold);
+        panelTitle.setPosition(Vector2f(640.f, 135.f));
+        window->draw(panelTitle);
 
         std::lock_guard<std::mutex> lock(shared_data->parkingsMutex);
 
@@ -119,135 +260,144 @@ private:
 
         int placesLibres = std::count(parkings.begin(), parkings.end(), true);
 
-        Text pisteText(font);
-        pisteText.setString("Piste: OPERATIONNELLE");
-        pisteText.setCharacterSize(18);
-        pisteText.setFillColor(Color::Green);
-        pisteText.setOutlineThickness(1.f);
-        pisteText.setOutlineColor(Color::Black);
-        pisteText.setPosition(Vector2f(20.f, 630.f));
-        window->draw(pisteText);
+        Text statsText(font);
+        std::ostringstream statsStream;
+        statsStream << "Disponibles: " << placesLibres << " / " << parkings.size();
+        statsText.setString(statsStream.str());
+        statsText.setCharacterSize(18);
+        statsText.setFillColor(placesLibres > 0 ? Color(0, 255, 100) : Color(255, 100, 0));
+        statsText.setPosition(Vector2f(640.f, 170.f));
+        window->draw(statsText);
 
-        Text parkingText(font);
-        parkingText.setString("Parkings: " + std::to_string(placesLibres) + "/" +
-            std::to_string(parkings.size()) + " libres");
-        parkingText.setCharacterSize(18);
-        parkingText.setFillColor(placesLibres > 0 ? Color::Green : Color::Red);
-        parkingText.setOutlineThickness(1.f);
-        parkingText.setOutlineColor(Color::Black);
-        parkingText.setPosition(Vector2f(20.f, 660.f));
-        window->draw(parkingText);
+        float startX = 650.f;
+        float startY = 220.f;
+        float parkingWidth = 160.f;
+        float parkingHeight = 100.f;
+        float spacingX = 20.f;
+        float spacingY = 20.f;
 
-        if (!avionsAuParking.empty()) {
-            int xOffset = 400;
-            int yOffset = 630;
-            Text parkingHeader(font);
-            parkingHeader.setString("Avions au parking:");
-            parkingHeader.setCharacterSize(16);
-            parkingHeader.setFillColor(Color::Cyan);
-            parkingHeader.setOutlineThickness(1.f);
-            parkingHeader.setOutlineColor(Color::Black);
-            parkingHeader.setPosition(Vector2f(xOffset, yOffset));
-            window->draw(parkingHeader);
+        int parkingsPerRow = 3;
 
-            yOffset += 25;
-            auto now = std::chrono::steady_clock::now();
+        for (size_t i = 0; i < parkings.size(); ++i) {
+            int row = i / parkingsPerRow;
+            int col = i % parkingsPerRow;
 
-            for (const auto& avion : avionsAuParking) {
-                auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(
-                    now - avion.heureArrivee).count();
+            float posX = startX + col * (parkingWidth + spacingX);
+            float posY = startY + row * (parkingHeight + spacingY);
 
-                Text avionText(font);
-                std::ostringstream ossAvion;
-                ossAvion << "P" << (avion.numeroPlace + 1) << ": " << avion.code
-                    << " (" << tempsParking << "s/" << avion.tempsParkingSecondes << "s)";
-                avionText.setString(ossAvion.str());
-                avionText.setCharacterSize(14);
-
-                if (tempsParking >= avion.tempsParkingSecondes) {
-                    avionText.setFillColor(Color::Yellow);
-                }
-                else {
-                    avionText.setFillColor(Color::White);
-                }
-
-                avionText.setOutlineThickness(1.f);
-                avionText.setOutlineColor(Color::Black);
-                avionText.setPosition(Vector2f(xOffset, yOffset));
-                window->draw(avionText);
-
-                yOffset += 20;
-                if (yOffset > 680) break;
-            }
-        }
-    }
-
-    void drawParkings() {
-        float startX = 100.f;
-        float startY = 480.f;
-        float spacing = 140.f;
-
-        std::lock_guard<std::mutex> lock(shared_data->parkingsMutex);
-
-        if (shared_data->parkingsLibres.find(airportName) == shared_data->parkingsLibres.end()) {
-            return;
-        }
-
-        auto& parkings = shared_data->parkingsLibres[airportName];
-        auto& avionsAuParking = shared_data->avionsAuParking[airportName];
-
-        for (size_t i = 0; i < parkings.size(); i+=1) {
             bool estLibre = parkings[i];
 
-            RectangleShape parking(Vector2f(100.f, 80.f));
-            parking.setPosition(Vector2f(startX + i * spacing, startY));
+            RectangleShape parking(Vector2f(parkingWidth, parkingHeight));
+            parking.setPosition(Vector2f(posX, posY));
 
-            parking.setFillColor(estLibre ? Color(40, 80, 40, 150) : Color(120, 40, 40, 150));
+            if (estLibre) {
+                parking.setFillColor(Color(20, 80, 40, 180));
+                parking.setOutlineColor(Color(0, 200, 100));
+            }
+            else {
+                parking.setFillColor(Color(80, 40, 40, 180));
+                parking.setOutlineColor(Color(255, 100, 100));
+            }
             parking.setOutlineThickness(3.f);
-            parking.setOutlineColor(estLibre ? Color::Green : Color::Red);
             window->draw(parking);
 
             Text label(font);
             label.setString("P" + std::to_string(i + 1));
-            label.setCharacterSize(22);
+            label.setCharacterSize(24);
             label.setFillColor(Color::White);
-            label.setOutlineThickness(2.f);
-            label.setOutlineColor(Color::Black);
-            label.setPosition(Vector2f(startX + i * spacing + 35.f, startY + 15.f));
+            label.setStyle(Text::Bold);
+            label.setPosition(Vector2f(posX + 10.f, posY + 10.f));
             window->draw(label);
 
             if (!estLibre) {
                 for (const auto& avion : avionsAuParking) {
                     if (avion.numeroPlace == static_cast<int>(i)) {
+                        auto now = std::chrono::steady_clock::now();
+                        auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(
+                            now - avion.heureArrivee).count();
+
                         Text avionCode(font);
                         avionCode.setString(avion.code);
-                        avionCode.setCharacterSize(14);
-                        avionCode.setFillColor(Color::Yellow);
-                        avionCode.setOutlineThickness(1.f);
-                        avionCode.setOutlineColor(Color::Black);
-                        avionCode.setPosition(Vector2f(startX + i * spacing + 15.f, startY + 45.f));
+                        avionCode.setCharacterSize(20);
+                        avionCode.setFillColor(Color(255, 220, 0));
+                        avionCode.setStyle(Text::Bold);
+                        avionCode.setPosition(Vector2f(posX + 10.f, posY + 45.f));
                         window->draw(avionCode);
+
+                        Text tempsText(font);
+                        std::ostringstream timeStream;
+                        timeStream << tempsParking << "s / " << avion.tempsParkingSecondes << "s";
+                        tempsText.setString(timeStream.str());
+                        tempsText.setCharacterSize(14);
+
+                        if (tempsParking >= avion.tempsParkingSecondes) {
+                            tempsText.setFillColor(Color(0, 255, 100));
+                        }
+                        else {
+                            tempsText.setFillColor(Color(200, 200, 200));
+                        }
+
+                        tempsText.setPosition(Vector2f(posX + 10.f, posY + 70.f));
+                        window->draw(tempsText);
                         break;
                     }
                 }
             }
+            else {
+                Text libreText(font);
+                libreText.setString("LIBRE");
+                libreText.setCharacterSize(18);
+                libreText.setFillColor(Color(100, 200, 100, 180));
+                libreText.setPosition(Vector2f(posX + 45.f, posY + 55.f));
+                window->draw(libreText);
+            }
         }
+    }
 
-        RectangleShape piste(Vector2f(700.f, 100.f));
-        piste.setPosition(Vector2f(150.f, 330.f));
-        piste.setFillColor(Color(60, 60, 60, 180));
-        piste.setOutlineThickness(4.f);
-        piste.setOutlineColor(Color::Green);
-        window->draw(piste);
+    void drawStatusBar() {
+        RectangleShape statusBar(Vector2f(1200.f, 70.f));
+        statusBar.setPosition(Vector2f(0.f, 730.f));
+        statusBar.setFillColor(Color(25, 30, 45, 240));
+        window->draw(statusBar);
 
-        Text pisteLabel(font);
-        pisteLabel.setString("PISTE");
-        pisteLabel.setCharacterSize(24);
-        pisteLabel.setFillColor(Color::White);
-        pisteLabel.setOutlineThickness(2.f);
-        pisteLabel.setOutlineColor(Color::Black);
-        pisteLabel.setPosition(Vector2f(450.f, 365.f));
-        window->draw(pisteLabel);
+        RectangleShape separatorLine(Vector2f(1200.f, 3.f));
+        separatorLine.setPosition(Vector2f(0.f, 727.f));
+        separatorLine.setFillColor(Color(0, 180, 240));
+        window->draw(separatorLine);
+
+        std::lock_guard<std::mutex> lock(shared_data->parkingsMutex);
+
+        if (shared_data->avionsAuParking.find(airportName) != shared_data->avionsAuParking.end()) {
+            auto& avionsAuParking = shared_data->avionsAuParking[airportName];
+
+            Text infoText(font);
+            std::ostringstream infoStream;
+            infoStream << "Avions au parking: " << avionsAuParking.size();
+            infoText.setString(infoStream.str());
+            infoText.setCharacterSize(20);
+            infoText.setFillColor(Color(0, 200, 255));
+            infoText.setPosition(Vector2f(40.f, 745.f));
+            window->draw(infoText);
+
+            auto now = std::chrono::steady_clock::now();
+            int pretsDecollage = 0;
+            for (const auto& avion : avionsAuParking) {
+                auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(
+                    now - avion.heureArrivee).count();
+                if (tempsParking >= avion.tempsParkingSecondes) {
+                    pretsDecollage++;
+                }
+            }
+
+            if (pretsDecollage > 0) {
+                Text readyText(font);
+                readyText.setString("Prets au decollage: " + std::to_string(pretsDecollage));
+                readyText.setCharacterSize(20);
+                readyText.setFillColor(Color(0, 255, 100));
+                readyText.setPosition(Vector2f(400.f, 745.f));
+                window->draw(readyText);
+            }
+        }
     }
 };
 
@@ -298,94 +448,18 @@ public:
 inline void AeroportWindow::render(const std::map<std::string, AvionVisuel>& avions) {
     if (!window || !window->isOpen()) return;
 
-    window->clear(Color(20, 20, 40));
+    window->clear(Color(15, 20, 30));
 
     if (backgroundLoaded && backgroundSprite) {
         window->draw(*backgroundSprite);
     }
 
-    drawParkings();
-
-    RectangleShape overlay(Vector2f(1000.f, 150.f));
-    overlay.setPosition(Vector2f(0.f, 0.f));
-    overlay.setFillColor(Color(0, 0, 0, 180));
-    window->draw(overlay);
-
-    Text title(font);
-    title.setString("Tour de Controle - " + airportName);
-    title.setCharacterSize(28);
-    title.setFillColor(Color::White);
-    title.setOutlineThickness(2.f);
-    title.setOutlineColor(Color::Black);
-    title.setPosition(Vector2f(20.f, 20.f));
-    window->draw(title);
-
+    drawHeader();
     drawNearbyAircraft(avions);
-    drawAirportInfo();
+    drawParkings();
+    drawStatusBar();
 
     window->display();
-}
-
-inline void AeroportWindow::drawNearbyAircraft(const std::map<std::string, AvionVisuel>& avions) {
-    int yOffset = 70;
-    int count = 0;
-
-    Text header(font);
-    header.setString("Avions en approche :");
-    header.setCharacterSize(20);
-    header.setFillColor(Color::Cyan);
-    header.setOutlineThickness(1.f);
-    header.setOutlineColor(Color::Black);
-    header.setPosition(Vector2f(20.f, yOffset - 10.f));
-    window->draw(header);
-
-    yOffset += 20;
-
-    for (const auto& pair : avions) {
-        const auto& av = pair.second;
-
-        int dx = av.position.get_x() - airportX;
-        int dy = av.position.get_y() - airportY;
-        float distance = std::sqrt(static_cast<float>(dx * dx + dy * dy));
-
-        if (distance < 400.f && count < 4) {
-            Text avionInfo(font);
-            std::ostringstream oss;
-            oss << std::left << std::setw(8) << av.nom << " | "
-                << std::setw(5) << static_cast<int>(distance) << "px | "
-                << std::setw(6) << av.altitude << "ft | "
-                << av.vitesse << " km/h";
-            avionInfo.setString(oss.str());
-            avionInfo.setCharacterSize(16);
-
-            if (distance < 50 && av.altitude < 2000) {
-                avionInfo.setFillColor(Color::Red);
-            }
-            else if (distance < 150) {
-                avionInfo.setFillColor(Color::Yellow);
-            }
-            else {
-                avionInfo.setFillColor(Color::White);
-            }
-
-            avionInfo.setOutlineThickness(1.f);
-            avionInfo.setOutlineColor(Color::Black);
-            avionInfo.setPosition(Vector2f(30.f, yOffset + count * 20.f));
-            window->draw(avionInfo);
-            count++;
-        }
-    }
-
-    if (count == 0) {
-        Text noAircraft(font);
-        noAircraft.setString("Aucun avion en approche");
-        noAircraft.setCharacterSize(16);
-        noAircraft.setFillColor(Color(150, 150, 150));
-        noAircraft.setOutlineThickness(1.f);
-        noAircraft.setOutlineColor(Color::Black);
-        noAircraft.setPosition(Vector2f(30.f, yOffset));
-        window->draw(noAircraft);
-    }
 }
 
 #endif

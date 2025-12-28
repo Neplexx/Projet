@@ -87,7 +87,7 @@ void CCR::planning() {
 	int vol_number = 1000;
 
 	for (int heure = 0; heure < 24; heure++) {
-		for (int minute = 0; minute < 60; minute += 30) {
+		for (int minute = 0; minute < 60; minute += 15) {
 			int dep_idx = rand() % cities.size();
 			int arr_idx;
 			do {

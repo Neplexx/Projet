@@ -200,7 +200,7 @@ void ThreadedAvion::avancer() {
                 avionParking.aeroport = aeroport_destination;
                 avionParking.numeroPlace = placeLibre;
                 avionParking.heureArrivee = std::chrono::steady_clock::now();
-                avionParking.tempsParkingSecondes = 15 + (rand() % 15);
+                avionParking.tempsParkingSecondes = 10;
 
                 data->avionsAuParking[aeroport_destination].push_back(avionParking);
 
