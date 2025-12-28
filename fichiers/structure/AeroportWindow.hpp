@@ -33,11 +33,7 @@ private:
     std::shared_ptr<DataHub> shared_data;
 
 public:
-    AeroportWindow(const std::string& name, int posX, int posY, Font& f,
-        const std::string& imagePath, std::shared_ptr<DataHub> data)
-        : airportName(name), airportX(posX), airportY(posY), font(f), isOpen(false),
-        backgroundLoaded(false), shared_data(data) {
-
+    AeroportWindow(const std::string& name, int posX, int posY, Font& f, const std::string& imagePath, std::shared_ptr<DataHub> data) : airportName(name), airportX(posX), airportY(posY), font(f), isOpen(false), backgroundLoaded(false), shared_data(data) {
         if (backgroundTexture.loadFromFile(imagePath)) {
             backgroundSprite = std::make_unique<Sprite>(backgroundTexture);
             backgroundLoaded = true;
@@ -49,12 +45,8 @@ public:
 
     void open() {
         if (!isOpen) {
-            window = std::make_unique<RenderWindow>(
-                VideoMode({ 1200, 800 }),
-                "TWR - " + airportName
-            );
+            window = std::make_unique<RenderWindow>( VideoMode({ 1200, 800 }),"TWR - " + airportName );
             window->setFramerateLimit(60);
-
             if (backgroundLoaded && backgroundSprite) {
                 float scaleX = 1200.f / backgroundTexture.getSize().x;
                 float scaleY = 800.f / backgroundTexture.getSize().y;
@@ -65,20 +57,17 @@ public:
                 float posY = (800.f - backgroundSprite->getGlobalBounds().size.y) / 2.f;
                 backgroundSprite->setPosition(Vector2f(posX, posY));
             }
-
             isOpen = true;
         }
     }
 
     void close() {
-        if (window && window->isOpen()) {
-            window->close();
-        }
+        if (window && window->isOpen()) {window->close();}
         isOpen = false;
     }
 
     bool checkEvents() {
-        if (!window || !window->isOpen()) return false;
+        if (!window||!window->isOpen()) return false;
 
         while (std::optional<Event> event = window->pollEvent()) {
             if (event->is<Event::Closed>()) {
@@ -161,7 +150,6 @@ private:
             window->draw(headerText);
         }
 
-        // Liste des avions
         int yOffset = 215;
         int count = 0;
         const int MAX_DISPLAY = 6;
@@ -251,9 +239,7 @@ private:
 
         std::lock_guard<std::mutex> lock(shared_data->parkingsMutex);
 
-        if (shared_data->parkingsLibres.find(airportName) == shared_data->parkingsLibres.end()) {
-            return;
-        }
+        if (shared_data->parkingsLibres.find(airportName) == shared_data->parkingsLibres.end()) {return;}
 
         auto& parkings = shared_data->parkingsLibres[airportName];
         auto& avionsAuParking = shared_data->avionsAuParking[airportName];
@@ -278,7 +264,7 @@ private:
 
         int parkingsPerRow = 3;
 
-        for (size_t i = 0; i < parkings.size(); ++i) {
+        for (size_t i = 0; i < parkings.size(); i+=1) {
             int row = i / parkingsPerRow;
             int col = i % parkingsPerRow;
 
@@ -313,8 +299,7 @@ private:
                 for (const auto& avion : avionsAuParking) {
                     if (avion.numeroPlace == static_cast<int>(i)) {
                         auto now = std::chrono::steady_clock::now();
-                        auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(
-                            now - avion.heureArrivee).count();
+                        auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(now - avion.heureArrivee).count();
 
                         Text avionCode(font);
                         avionCode.setString(avion.code);
@@ -330,12 +315,8 @@ private:
                         tempsText.setString(timeStream.str());
                         tempsText.setCharacterSize(14);
 
-                        if (tempsParking >= avion.tempsParkingSecondes) {
-                            tempsText.setFillColor(Color(0, 255, 100));
-                        }
-                        else {
-                            tempsText.setFillColor(Color(200, 200, 200));
-                        }
+                        if (tempsParking >= avion.tempsParkingSecondes) {tempsText.setFillColor(Color(0, 255, 100));}
+                        else {tempsText.setFillColor(Color(200, 200, 200));}
 
                         tempsText.setPosition(Vector2f(posX + 10.f, posY + 70.f));
                         window->draw(tempsText);
@@ -382,11 +363,8 @@ private:
             auto now = std::chrono::steady_clock::now();
             int pretsDecollage = 0;
             for (const auto& avion : avionsAuParking) {
-                auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(
-                    now - avion.heureArrivee).count();
-                if (tempsParking >= avion.tempsParkingSecondes) {
-                    pretsDecollage++;
-                }
+                auto tempsParking = std::chrono::duration_cast<std::chrono::seconds>(now - avion.heureArrivee).count();
+                if (tempsParking >= avion.tempsParkingSecondes) {pretsDecollage++;}
             }
 
             if (pretsDecollage > 0) {
@@ -409,9 +387,7 @@ private:
     std::shared_ptr<DataHub> shared_data;
 
 public:
-    AeroportWindowManager(Font& f, const std::string& imgPath, std::shared_ptr<DataHub> data)
-        : font(f), imagePath(imgPath), shared_data(data) {
-    }
+    AeroportWindowManager(Font& f, const std::string& imgPath, std::shared_ptr<DataHub> data) : font(f), imagePath(imgPath), shared_data(data) {}
 
     void addAeroport(const std::string& name, int posX, int posY) {
         windows[name] = std::make_unique<AeroportWindow>(name, posX, posY, font, imagePath, shared_data);

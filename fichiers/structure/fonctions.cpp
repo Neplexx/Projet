@@ -112,7 +112,7 @@ void CCR::planning() {
 				{"code", "AF" + std::to_string(vol_number)}
 				});
 
-			vol_number++;
+			vol_number+=1;
 		}
 	}
 
@@ -171,7 +171,7 @@ void CCR::calcul_trajectoire(Avion& avion) {
 	float current_x = x1;
 	float current_y = y1;
 
-	for (int i = 0; i <= steps; ++i) {
+	for (int i = 0; i <= steps; i+=1) {
 		path.push_back(Coord(static_cast<int>(current_x), static_cast<int>(current_y)));
 		current_x += stepX;
 		current_y += stepY;

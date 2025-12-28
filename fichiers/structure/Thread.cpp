@@ -14,9 +14,7 @@ Coord convertirCoordonneesRelatives(float relX, float relY, int largeurFenetre, 
 
 std::string determinerAeroportFromCoord(const Coord& destination, std::shared_ptr<DataHub> data) {
     std::lock_guard<std::mutex> lock(data->coordonneesAeroportsMutex);
-
     const int TOLERANCE = 50;
-
     for (const auto& pair : data->coordonneesAeroports) {
         const Coord& coord = pair.second;
         if (std::abs(destination.get_x() - coord.get_x()) <= TOLERANCE &&
@@ -24,9 +22,7 @@ std::string determinerAeroportFromCoord(const Coord& destination, std::shared_pt
             return pair.first;
         }
     }
-
-    std::cerr << "ERREUR: Aucun aéroport trouvé pour coordonnées "
-        << destination << std::endl;
+    std::cerr << "ERREUR: Aucun aéroport trouvé pour coordonnées " << destination << std::endl;
     std::cerr << "Aéroports disponibles:" << std::endl;
     for (const auto& pair : data->coordonneesAeroports) {
         std::cerr << "  - " << pair.first << ": " << pair.second << std::endl;
@@ -76,13 +72,10 @@ void ThreadedAvion::message_de_APP() {
         lock.unlock();
 
         if (!message.trajectoire.empty()) {
-            std::cout << "Avion " << get_code() << " reçoit nouvelle trajectoire de "
-                << message.trajectoire.size() << " points" << std::endl;
+            std::cout << "Avion " << get_code() << " reçoit nouvelle trajectoire de " << message.trajectoire.size() << " points" << std::endl;
         }
-
         if (message.objectifAltitude > 0) {
-            std::cout << "Avion " << get_code() << " objectif altitude: "
-                << message.objectifAltitude << std::endl;
+            std::cout << "Avion " << get_code() << " objectif altitude: " << message.objectifAltitude << std::endl;
         }
     }
 }
@@ -111,8 +104,7 @@ void ThreadedAvion::carburant_et_urgences() {
     set_carburant(get_carburant() - consommation);
 
     if (get_carburant() < 200) {
-        std::cout << "AVION " << get_code() << " CARBURANT FAIBLE: "
-            << get_carburant() << "L" << std::endl;
+        std::cout << "AVION " << get_code() << " CARBURANT FAIBLE: " << get_carburant() << "L" << std::endl;
 
         AvionToAPP urgence;
         urgence.avionCode = get_code();
@@ -204,20 +196,16 @@ void ThreadedAvion::avancer() {
 
                 data->avionsAuParking[aeroport_destination].push_back(avionParking);
 
-                std::cout << "[PARKING] Avion " << get_code() << " garé au parking P"
-                    << (placeLibre + 1) << " de " << aeroport_destination
-                    << " pour " << avionParking.tempsParkingSecondes << "s" << std::endl;
+                std::cout << "[PARKING] Avion " << get_code() << " garé au parking P" << (placeLibre + 1) << " de " << aeroport_destination << " pour " << avionParking.tempsParkingSecondes << "s" << std::endl;
             }
             else {
-                std::cout << "[WARNING] Pas de place disponible à " << aeroport_destination
-                    << " pour " << get_code() << std::endl;
+                std::cout << "[WARNING] Pas de place disponible à " << aeroport_destination << " pour " << get_code() << std::endl;
             }
         }
         {
             std::lock_guard<std::mutex> lock(data->avions_positionsMutex);
             data->avions_positions.erase(get_code());
-            std::cout << "[CARTE] Avion " << get_code()
-                << " retiré de la carte internationale" << std::endl;
+            std::cout << "[CARTE] Avion " << get_code() << " retiré de la carte internationale" << std::endl;
         }
         {
             std::lock_guard<std::mutex> lock(data->app_avionMutex);
@@ -259,27 +247,24 @@ void ThreadedAvion::avancer() {
                         dy -= static_cast<int>((entry.second.get_y() - position_actuelle.get_y()) * force_repulsion);
 
                         if (warnings_cooldown[entry.first] <= 0) {
-                            std::cout << " ! Avion " << get_code() << " évite " << entry.first
-                                << " (distance: " << distance_autre << "px)" << std::endl;
+                            std::cout << " ! Avion " << get_code() << " évite " << entry.first << " (distance: " << distance_autre << "px)" << std::endl;
                             warnings_cooldown[entry.first] = 20;
                         }
                     }
                 }
             }
         }
-
         for (auto& pair : warnings_cooldown) {
             if (pair.second > 0) pair.second--;
         }
-
         distance = std::sqrt(dx * dx + dy * dy);
         if (distance == 0) distance = 1;
 
         float vitesse_ajustee = vitesse;
+
         if (distance < 100) {
             vitesse_ajustee = vitesse * (distance / 100.0f);
         }
-
         float ratio = (vitesse_ajustee * 0.03f) / distance;
         int moveX = static_cast<int>(dx * ratio);
         int moveY = static_cast<int>(dy * ratio);
@@ -389,10 +374,9 @@ void ThreadedCCR::trafic_national() {
 
     static int compteur = 0;
     if (compteur % 50 == 0 && !shared_data_->avions_positions.empty()) {
-        std::cout << "\n=== CCR: " << shared_data_->avions_positions.size()
-            << " avions en vol ===" << std::endl;
+        std::cout << "\n=== CCR: " << shared_data_->avions_positions.size() << " avions en vol ===" << std::endl;
     }
-    compteur++;
+    compteur+=1;
 }
 
 void ThreadedCCR::gerer_planning() {
@@ -459,29 +443,23 @@ void ThreadedAPP::message_de_Avion() {
             shared_data_->avions_positions[message.avionCode] = message.Position;
         }
 
-        double distance = std::sqrt(
-            std::pow(message.Position.get_x() - position_aeroport_.get_x(), 2) +
-            std::pow(message.Position.get_y() - position_aeroport_.get_y(), 2)
-        );
+        double distance = std::sqrt(std::pow(message.Position.get_x() - position_aeroport_.get_x(), 2) + std::pow(message.Position.get_y() - position_aeroport_.get_y(), 2));
 
         const float SEUIL_APPROCHE = 200.0f;
         const float SEUIL_FINAL = 50.0f;
         const float SEUIL_ATTERRISSAGE = 10.0f;
 
-        std::cout << "\nAPP " << nom_aeroport_ << " : Avion " << message.avionCode
-            << " - Distance: " << distance << "px | Altitude: " << message.Altitude << "ft" << std::endl;
+        std::cout << "\nAPP " << nom_aeroport_ << " : Avion " << message.avionCode << " - Distance: " << distance << "px | Altitude: " << message.Altitude << "ft" << std::endl;
 
         if (distance < SEUIL_ATTERRISSAGE) {
             if (avions_en_atterrissage.find(message.avionCode) == avions_en_atterrissage.end()) {
-                std::cout << "APP " << nom_aeroport_ << " : Demande atterrissage pour "
-                    << message.avionCode << std::endl;
+                std::cout << "APP " << nom_aeroport_ << " : Demande atterrissage pour " << message.avionCode << std::endl;
                 demande_piste_TWR(message.avionCode);
                 avions_en_atterrissage.insert(message.avionCode);
             }
         }
         else if (distance < SEUIL_FINAL) {
-            std::cout << "APP " << nom_aeroport_ << " : Approche finale pour "
-                << message.avionCode << std::endl;
+            std::cout << "APP " << nom_aeroport_ << " : Approche finale pour " << message.avionCode << std::endl;
 
             APPToAvion trajectoire;
             trajectoire.avionCode = message.avionCode;
@@ -497,8 +475,7 @@ void ThreadedAPP::message_de_Avion() {
         }
         else if (distance < SEUIL_APPROCHE) {
             if (avions_en_attente.find(message.avionCode) == avions_en_attente.end()) {
-                std::cout << "APP " << nom_aeroport_ << " : Mise en attente circulaire pour "
-                    << message.avionCode << std::endl;
+                std::cout << "APP " << nom_aeroport_ << " : Mise en attente circulaire pour " << message.avionCode << std::endl;
                 envoie_trajectoire_circulaire(message.avionCode, message.Position);
                 avions_en_attente.insert(message.avionCode);
             }
@@ -517,13 +494,11 @@ void ThreadedAPP::message_de_TWR() {
         lock.unlock();
 
         if (reponse.pisteLibre) {
-            std::cout << "APP " << nom_aeroport_ << " : Piste libre confirmée pour "
-                << reponse.avionCode << std::endl;
+            std::cout << "APP " << nom_aeroport_ << " : Piste libre confirmée pour " << reponse.avionCode << std::endl;
             envoie_trajectoire_Avion(reponse.avionCode);
         }
         else {
-            std::cout << "APP " << nom_aeroport_ << " : Piste occupée pour "
-                << reponse.avionCode << ", maintien en attente" << std::endl;
+            std::cout << "APP " << nom_aeroport_ << " : Piste occupée pour " << reponse.avionCode << ", maintien en attente" << std::endl;
             std::lock_guard<std::mutex> pos_lock(shared_data_->avions_positionsMutex);
             if (shared_data_->avions_positions.find(reponse.avionCode) != shared_data_->avions_positions.end()) {
                 envoie_trajectoire_circulaire(reponse.avionCode,
@@ -590,7 +565,7 @@ void ThreadedAPP::trafic_aerien() {
         std::cout << "APP " << nom_aeroport_ << " - Trafic: "
             << shared_data_->avions_positions.size() << " avions" << std::endl;
     }
-    compteur++;
+    compteur+=1;
 }
 
 void ThreadedAPP::collisions() {
@@ -615,9 +590,7 @@ void ThreadedAPP::collisions() {
             float distance = std::sqrt(dx * dx + dy * dy);
 
             if (distance < 15) {
-                std::cout << "\nAPP " << nom_aeroport_ << " : ALERTE COLLISION entre "
-                    << avions_en_vol[i].first << " et " << avions_en_vol[j].first
-                    << " (distance: " << distance << "px)" << std::endl;
+                std::cout << "\nAPP " << nom_aeroport_ << " : ALERTE COLLISION entre " << avions_en_vol[i].first << " et " << avions_en_vol[j].first << " (distance: " << distance << "px)" << std::endl;
             }
         }
     }
@@ -625,8 +598,7 @@ void ThreadedAPP::collisions() {
 
 
 
-ThreadedTWR::ThreadedTWR(int nb_places, const std::string& nom_a, std::shared_ptr<DataHub> sd)
-    : TWR(nb_places), shared_data_(sd), nom_aeroport_(nom_a) {
+ThreadedTWR::ThreadedTWR(int nb_places, const std::string& nom_a, std::shared_ptr<DataHub> sd) : TWR(nb_places), shared_data_(sd), nom_aeroport_(nom_a) {
     initialiser_parkings();
 }
 
@@ -639,11 +611,9 @@ void ThreadedTWR::initialiser_parkings() {
 
 void ThreadedTWR::run() {
     std::cout << "TWR " << nom_aeroport_ << " démarrée" << std::endl;
-
     while (!stop_thread_) {
         message_de_APP();
         gerer_parking();
-
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
@@ -666,7 +636,6 @@ void ThreadedTWR::join() {
 void ThreadedTWR::set_piste(bool facteur) {
     std::lock_guard<std::mutex> lock(shared_data_->global_pisteLibre_mutex);
     shared_data_->global_pisteLibre = facteur;
-
     if (facteur) {
         shared_data_->global_pisteLibreCondition.notify_all();
     }
@@ -674,7 +643,6 @@ void ThreadedTWR::set_piste(bool facteur) {
 
 void ThreadedTWR::message_de_APP() {
     std::unique_lock<std::mutex> lock(shared_data_->app_twrMutex);
-
     while (!shared_data_->app_twrQueue.empty()) {
         APPToTWR_DemandePiste demande = shared_data_->app_twrQueue.front();
         shared_data_->app_twrQueue.pop();
@@ -695,8 +663,7 @@ void ThreadedTWR::message_de_APP() {
             }
             shared_data_->twr_appCondition.notify_one();
 
-            std::cout << "TWR " << nom_aeroport_ << " : Autorise atterrissage pour "
-                << demande.avionCode << std::endl;
+            std::cout << "TWR " << nom_aeroport_ << " : Autorise atterrissage pour " << demande.avionCode << std::endl;
 
             std::this_thread::sleep_for(std::chrono::seconds(3));
             set_piste(true);
@@ -714,8 +681,7 @@ void ThreadedTWR::message_de_APP() {
             }
             shared_data_->twr_appCondition.notify_one();
 
-            std::cout << "TWR " << nom_aeroport_ << " : Piste occupée, "
-                << demande.avionCode << " en attente" << std::endl;
+            std::cout << "TWR " << nom_aeroport_ << " : Piste occupée, " << demande.avionCode << " en attente" << std::endl;
         }
         lock.lock();
     }
@@ -741,18 +707,12 @@ void ThreadedTWR::gerer_parking() {
             for (const auto& avion : avionsAuParking) {
                 auto temps = std::chrono::duration_cast<std::chrono::seconds>(
                     now - avion.heureArrivee).count();
-                std::cout << "    * " << avion.code << " au P" << (avion.numeroPlace + 1)
-                    << " depuis " << temps << "s (départ prévu à "
-                    << avion.tempsParkingSecondes << "s)" << std::endl;
+                std::cout << "    * " << avion.code << " au P" << (avion.numeroPlace + 1) << " depuis " << temps << "s (départ prévu à " << avion.tempsParkingSecondes << "s)" << std::endl;
             }
         }
     }
-    compteur++;
+    compteur+=1;
 }
-
-void ThreadedTWR::gerer_decollages() {}
-
-
 
 void SimulationManager::addAvion(const std::string& code_init, int alt_init, int vit_init,
     const Coord& pos_init, const Coord& dest_coord,

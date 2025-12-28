@@ -74,12 +74,7 @@ struct AvionVisuel {
     vector<Vector2f> trajectoirePredite;
     bool enEvitement;
 
-    AvionVisuel() : nom(""), id(0), selectionne(false), couleurBase(Color::White),
-        position(Coord(0, 0)), positionPrecedente(Coord(0, 0)), tempsDepuisMaj(0.f),
-        altitude(0), vitesse(0), carburant(0),
-        villeDepart(""), villeDestination(""), distanceParcourue(0.f), tempsVol(0.f),
-        enEvitement(false) {
-    }
+    AvionVisuel() : nom(""), id(0), selectionne(false), couleurBase(Color::White), position(Coord(0, 0)), positionPrecedente(Coord(0, 0)), tempsDepuisMaj(0.f), altitude(0), vitesse(0), carburant(0), villeDepart(""), villeDestination(""), distanceParcourue(0.f), tempsVol(0.f), enEvitement(false) {}
 };
 
 #include "structure/AeroportWindow.hpp"
@@ -91,7 +86,6 @@ struct Ville {
     CircleShape marqueur;
     Text texte;
 };
-
 
 Texture loadBackgroundImage(const string& path) {
     Texture backgroundImage;
@@ -109,9 +103,7 @@ Texture loadAvionTexture(const string& path) {
         img.resize(Vector2u(32, 32), Color::Blue);
         for (unsigned int y = 0; y < 32; ++y) {
             for (unsigned int x = 0; x < 32; ++x) {
-                if ((x >= 14 && x <= 18 && y >= 8 && y <= 24) ||
-                    (x >= 10 && x <= 22 && y >= 16 && y <= 18) ||
-                    (x >= 12 && x <= 20 && y >= 8 && y <= 12)) {
+                if ((x >= 14 && x <= 18 && y >= 8 && y <= 24) || (x >= 10 && x <= 22 && y >= 16 && y <= 18) || (x >= 12 && x <= 20 && y >= 8 && y <= 12)) {
                     img.setPixel(Vector2u(x, y), Color::White);
                 }
             }
@@ -171,8 +163,7 @@ Coord trouverPositionVille(const string& nomVille, const vector<Ville>& villes) 
 string determinerVilleFromCoord(const Coord& coord, const vector<Ville>& villes) {
     const int TOLERANCE = 50;
     for (const auto& ville : villes) {
-        if (abs(coord.get_x() - ville.position.get_x()) <= TOLERANCE &&
-            abs(coord.get_y() - ville.position.get_y()) <= TOLERANCE) {
+        if (abs(coord.get_x() - ville.position.get_x()) <= TOLERANCE && abs(coord.get_y() - ville.position.get_y()) <= TOLERANCE) {
             return ville.nom;
         }
     }
@@ -218,7 +209,7 @@ void calculerTrajectoireSimple(AvionVisuel& av, const Coord& destination) {
     av.trajectoirePredite.clear();
     Vector2f pos(static_cast<float>(av.position.get_x()), static_cast<float>(av.position.get_y()));
     Vector2f dest(static_cast<float>(destination.get_x()), static_cast<float>(destination.get_y()));
-    for (int i = 0; i <= 20; ++i) {
+    for (int i = 0; i <= 20; i+=1) {
         av.trajectoirePredite.push_back(pos + (dest - pos) * (i / 20.f));
     }
 }
@@ -239,10 +230,7 @@ int main() {
     float scale = min(scaleX, scaleY);
 
     backgroundSprite.setScale(Vector2f(scale, scale));
-    backgroundSprite.setPosition(Vector2f(
-        (app.getSize().x - backgroundSprite.getGlobalBounds().size.x) / 2.f,
-        (app.getSize().y - backgroundSprite.getGlobalBounds().size.y) / 2.f
-    ));
+    backgroundSprite.setPosition(Vector2f((app.getSize().x - backgroundSprite.getGlobalBounds().size.x) / 2.f, (app.getSize().y - backgroundSprite.getGlobalBounds().size.y) / 2.f));
 
     vector<Ville> villes = createVilles(font);
     initMarkersTexts(villes, backgroundSprite);
@@ -255,9 +243,7 @@ int main() {
     }
     AeroportWindowManager aeroportWindows(font, path_image + "aeroport.png", simulation.shared_data);
     for (const auto& ville : villes) {
-        aeroportWindows.addAeroport(ville.nom,
-            ville.position.get_x(),
-            ville.position.get_y());
+        aeroportWindows.addAeroport(ville.nom,ville.position.get_x(),ville.position.get_y());
     }
 
     CCR ccr_logic;
@@ -301,11 +287,9 @@ int main() {
                     string departure = flight["departure"];
                     string arrival = flight["arrival"];
                     if (departure == arrival) {
-                        cout << "[PLANNING] Vol " << code << " ignoré : "
-                            << departure << " → " << arrival << " (même ville)" << endl;
+                        cout << "[PLANNING] Vol " << code << " ignoré : " << departure << " → " << arrival << " (même ville)" << endl;
                         continue;
                     }
-
                     Coord posDep = trouverPositionVille(departure, villes);
                     Coord posArr = trouverPositionVille(arrival, villes);
 
@@ -320,9 +304,7 @@ int main() {
                             auto& avionsAuParking = aeroportPair.second;
 
                             for (auto it = avionsAuParking.begin(); it != avionsAuParking.end(); ++it) {
-                                auto tempsParking = chrono::duration_cast<chrono::seconds>(
-                                    now - it->heureArrivee).count();
-
+                                auto tempsParking = chrono::duration_cast<chrono::seconds>(now - it->heureArrivee).count();
                                 if (tempsParking >= it->tempsParkingSecondes) {
                                     codeDisponible = it->code;
                                     aeroportSource = it->aeroport;
@@ -344,8 +326,7 @@ int main() {
                     Coord positionDepart = codeDisponible.empty() ? posDep : positionReelle;
 
                     if (!codeDisponible.empty() && aeroportSource == arrival) {
-                        cout << "[PLANNING] Vol " << code << " ignoré : avion " << codeDisponible
-                            << " déjà à destination (" << arrival << ")" << endl;
+                        cout << "[PLANNING] Vol " << code << " ignoré : avion " << codeDisponible << " déjà à destination (" << arrival << ")" << endl;
                         continue;
                     }
 
@@ -366,8 +347,7 @@ int main() {
                         }
                     }
                     else {
-                        cout << "[PLANNING] Vol " << code << " : Création d'un nouvel avion ("
-                            << departure << " → " << arrival << ")" << endl;
+                        cout << "[PLANNING] Vol " << code << " : Création d'un nouvel avion (" << departure << " → " << arrival << ")" << endl;
                     }
                     auto avion = make_unique<ThreadedAvion>(simulation.shared_data);
                     avion->set_code(codeAvion);
@@ -410,8 +390,7 @@ int main() {
                     }
                 }
                 if (!avionClique) {
-                    if (!avionSelectionneCode.empty())
-                        avionsVisuels[avionSelectionneCode].selectionne = false;
+                    if (!avionSelectionneCode.empty()) avionsVisuels[avionSelectionneCode].selectionne = false;
                     avionSelectionneCode = "";
                 }
             }
@@ -421,8 +400,7 @@ int main() {
 
             vector<string> aSupprimer;
             for (auto& pair : avionsVisuels) {
-                if (simulation.shared_data->avions_positions.find(pair.first) == simulation.shared_data->avions_positions.end())
-                    aSupprimer.push_back(pair.first);
+                if (simulation.shared_data->avions_positions.find(pair.first) == simulation.shared_data->avions_positions.end()) aSupprimer.push_back(pair.first);
             }
             for (const auto& code : aSupprimer) {
                 avionsVisuels.erase(code);
@@ -486,8 +464,7 @@ int main() {
         }
 
         app.draw(clockText);
-        if (!avionSelectionneCode.empty() && avionsVisuels.count(avionSelectionneCode))
-            afficherInfosAvion(app, avionsVisuels[avionSelectionneCode], font);
+        if (!avionSelectionneCode.empty() && avionsVisuels.count(avionSelectionneCode)) afficherInfosAvion(app, avionsVisuels[avionSelectionneCode], font);
 
         app.display();
     }

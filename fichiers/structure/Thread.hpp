@@ -178,7 +178,6 @@ public:
     void set_piste(bool facteur);
     void message_de_APP();
     void gerer_parking();
-    void gerer_decollages();
 
     void initialiser_parkings();
 };
@@ -196,9 +195,7 @@ private:
 public:
     SimulationManager() : shared_data(std::make_shared<DataHub>()) {}
 
-    void addAvion(const std::string& code_init, int alt_init, int vit_init,
-        const Coord& pos_init, const Coord& dest_coord,
-        int parking_init, int carb_init);
+    void addAvion(const std::string& code_init, int alt_init, int vit_init, const Coord& pos_init, const Coord& dest_coord, int parking_init, int carb_init);
 
     void addCCR();
     void addAPP(const std::string& airport_name, const Coord& position);

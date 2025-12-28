@@ -13,10 +13,10 @@ private:
 	int x;
 	int y;
 public:
-	void set_x(int X); // d�finit la coordonn�e x
-	void set_y(int Y); // d�finit la coordonn�e y
-	int get_x() const; // retourne la coordonn�e x
-	int get_y() const; // retourne la coordonn�e y
+	void set_x(int X);
+	void set_y(int Y);
+	int get_x() const;
+	int get_y() const;
 	Coord(int X = 0, int Y = 0);
 	bool operator==(const Coord& other) const;
 	friend std::ostream& operator<<(std::ostream& os, const Coord& c);
@@ -59,18 +59,11 @@ public:
 
 class CCR {
 public:
-	void calcul_trajectoire(Avion& avion); // calcul d'une trajectoire sans collision pour l'avion
+	void calcul_trajectoire(Avion& avion);
 	void planning();
 };
 
-class APP {
-public:
-	void envoie_infos_avion(); // envoie la trajectoire et altitude � suivre � l'avion apr�s r�ception du signal
-	void piste_libre(); // demande � twr si la piste d'atterrissage est libre
-	void urgence();
-	void trajectoire_atterissage();
-
-};
+class APP {};
 
 class TWR {
 private:
@@ -79,11 +72,7 @@ private:
 	void set_piste(bool facteur);
 public:
 	bool get_piste() const;
-
 	int trouver_place_libre();
-
-	void journal();
-
 	TWR(int nb_places);
 };
 #endif
